@@ -10,8 +10,7 @@
 #define TASK_H_
 
 #include "board.h"
-#include "semaphore.h"
-#include "rtos.h"
+
 
 #if BOARD_heap_single_block_size < 32
 	#error "BOARD_heap_single_block_size must be at least equal to 32"

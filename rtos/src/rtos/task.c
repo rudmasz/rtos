@@ -8,7 +8,6 @@
 #include <avr/io.h>
 #include <string.h>
 #include "rtos.h"
-#include "timers.h"
 
 
 RTOS_static	volatile 	task_handle_t *volatile	__task_sleeping_g;

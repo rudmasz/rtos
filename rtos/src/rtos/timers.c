@@ -7,7 +7,6 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include "rtos.h"
-#include "timers.h"
 
 
 

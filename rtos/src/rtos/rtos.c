@@ -7,9 +7,6 @@
 #include <string.h>
 #include "rtos.h"
 #include <util/delay.h>
-#include "timers.h"
-#include "heap.h"
-#include "semaphore.h"
 
 
 void idle_task(void);

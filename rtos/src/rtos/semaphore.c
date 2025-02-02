@@ -6,7 +6,6 @@
  */ 
 #include <avr/io.h>
 #include "rtos.h"
-#include "semaphore.h"
 
 #define THIS_IS_MUTEX	0
 

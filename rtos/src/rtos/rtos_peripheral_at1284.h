@@ -245,59 +245,60 @@ inline void __rtos_peripheral_init(void)
 #endif
 }
 
-
-inline uint8_t volatile *__rtOS_GetPORT(uint8_t PinNum)		
+#ifdef BOARD_AT_Package_TQFP
+inline uint8_t volatile *__rtos_getPORT(uint8_t pin_num)		
 {														
-	if( (!PinNum) || (PinNum > 44) )return (void *)0x00;
+	if( (!pin_num) || (pin_num > 44) )return (void *)0x00;
 
-	if( (PinNum < 4) 	|| (PinNum > 39) )return &PORTB;
-	if( (PinNum > 8) 	&& (PinNum < 17) )return &PORTD;
-	if( (PinNum > 18) 	&& (PinNum < 27) )return &PORTC;
-	if( (PinNum > 29) 	&& (PinNum < 38) )return &PORTA;	
+	if( (pin_num < 4) 	|| (pin_num > 39) )return &PORTB;
+	if( (pin_num > 8) 	&& (pin_num < 17) )return &PORTD;
+	if( (pin_num > 18) 	&& (pin_num < 27) )return &PORTC;
+	if( (pin_num > 29) 	&& (pin_num < 38) )return &PORTA;	
 
 	return (void *)0x00;
 }
 
-inline uint8_t volatile *__rtOS_GetPIN(uint8_t PinNum)		
+inline uint8_t volatile *__rtos_getPIN(uint8_t pin_num)		
 {														
-	if( (!PinNum) || (PinNum > 44) )return (void *)0x00;
+	if( (!pin_num) || (pin_num > 44) )return (void *)0x00;
 
-	if( (PinNum < 4) 	|| (PinNum > 39) )return &PINB;
-	if( (PinNum > 8) 	&& (PinNum < 17) )return &PIND;
-	if( (PinNum > 18) 	&& (PinNum < 27) )return &PINC;
-	if( (PinNum > 29) 	&& (PinNum < 38) )return &PINA;	
+	if( (pin_num < 4) 	|| (pin_num > 39) )return &PINB;
+	if( (pin_num > 8) 	&& (pin_num < 17) )return &PIND;
+	if( (pin_num > 18) 	&& (pin_num < 27) )return &PINC;
+	if( (pin_num > 29) 	&& (pin_num < 38) )return &PINA;	
 
 	return (void *)0x00;
 }
 
-inline uint8_t volatile *__rtOS_GetDDR(uint8_t PinNum)		
+inline uint8_t volatile *__rtos_getDDR(uint8_t pin_num)		
 {														
-	if( (!PinNum) || (PinNum > 44) )return (void *)0x00;
+	if( (!pin_num) || (pin_num > 44) )return (void *)0x00;
 
-	if( (PinNum < 4) 	|| (PinNum > 39) )return &DDRB;
-	if( (PinNum > 8) 	&& (PinNum < 17) )return &DDRD;
-	if( (PinNum > 18) 	&& (PinNum < 27) )return &DDRC;
-	if( (PinNum > 29) 	&& (PinNum < 38) )return &DDRA;	
+	if( (pin_num < 4) 	|| (pin_num > 39) )return &DDRB;
+	if( (pin_num > 8) 	&& (pin_num < 17) )return &DDRD;
+	if( (pin_num > 18) 	&& (pin_num < 27) )return &DDRC;
+	if( (pin_num > 29) 	&& (pin_num < 38) )return &DDRA;	
 
 	return (void *)0x00;
 }
 
-inline uint8_t __rtOS_GetPinPort(uint8_t PinNum)		
+inline uint8_t __rtos_get_port_pin_nr(uint8_t pin_num)		
 {														
+	if(!pin_num)return 0x00;
 
-	if(!PinNum)return 0x00;
-
-	if(PinNum < 4) return PinNum += 4;
-	if( (PinNum > 8) 	&& (PinNum < 17) ) return PinNum - 9;
-	if( (PinNum > 18) 	&& (PinNum < 27) ) return PinNum - 19;
-	if( (PinNum > 29) 	&& (PinNum < 38) ){
-		int8_t pin = PinNum - 37;
+	if(pin_num < 4) return pin_num += 4;
+	if( (pin_num > 8) 	&& (pin_num < 17) ) return pin_num - 9;
+	if( (pin_num > 18) 	&& (pin_num < 27) ) return pin_num - 19;
+	if( (pin_num > 29) 	&& (pin_num < 38) )
+	{
+		int8_t pin = pin_num - 37;
 
 		return -pin;
 	}
-	if(PinNum > 39)						   return PinNum - 40;
+	if(pin_num > 39)return pin_num - 40;
 		
 	return 0;
 }
+#endif
 
 #endif

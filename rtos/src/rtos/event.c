@@ -1,18 +1,12 @@
 /*
- * event.h
+ * event.c
  *
- * Created: 02.08.2024 09:03:24
+ * Created: 02.08.2024 09:02:57
  *  Author: tom
  */ 
+#include <avr/io.h>
+#include "rtos.h"
 
-
-#ifndef EVENT_H_
-#define EVENT_H_
-
-#define event_action_t	semaphore_t
-
-
-void __event_wait_signal(uint8_t volatile *sig_src, uint8_t sig_mask, uint16_t time_ms);
 
 
 
@@ -24,7 +18,12 @@ void __event_wait_signal(uint8_t volatile *sig_src, uint8_t sig_mask, uint16_t t
  *
  * @param		action			pointer to the action.
   **************************************************************************************************/
-void event_action_init(event_action_t *action);
+
+void event_action_init(event_action_t *action)
+{
+	if(action != NULL)
+		semaphore_init(action, 2, 0);
+}
 
 
 /**********************************************************************************************//**
@@ -35,24 +34,16 @@ void event_action_init(event_action_t *action);
  *
  * @param		sender			pointer to the action sender.
   **************************************************************************************************/
-void event_action_notify_listeners(event_action_t *sender);
+
+void event_action_notify_listeners(event_action_t *sender)
+{
+	while(semaphore_is_pending_list_empty(sender) == FALSE)
+		semaphore_signal(sender);
+}
 
 
 /**********************************************************************************************//**
- * @fn	void condWait_event_action_wait(event_action_t *sender)
- *
- * @brief	This function will suspend the currently running task and
- *			add it to the list of tasks waiting for some action to occur.
- *			Use the action mechanism to create a system that notifies multiple tasks when a specific action occurs.
- *
- * @param		sender			pointer to the action sender.
-  **************************************************************************************************/
-#define condWait_event_action_wait(sender)\
-			condWait_semaphore_wait(sender)
-
-
-/**********************************************************************************************//**
- * @fn	void condWait_event_wait_signal(uint8_t volatile *sig_src, uint8_t sig_mask, uint16_t time_ms)
+ * @fn	void __event_wait_signal(uint8_t volatile *sig_src, uint8_t sig_mask, uint16_t time_ms)
  *
  * @brief	This function will suspend the currently running task until 
  *			the following condition is met *sig_src&sig_mask == sig_mask. 
@@ -60,13 +51,24 @@ void event_action_notify_listeners(event_action_t *sender);
  *			then before the next condition check the task will be additionally suspended 
  *			for a time equal to the time_ms value.
  *
- * @param	sig_src		signal source pointer
+ * @param	sig_src		signal source
  *			sig_mask	signal mask
  *			time_ms		sleep time
  *
  **************************************************************************************************/
 
-#define condWait_event_wait_signal(sig_src, sig_mask, time_ms)\
-			task_update_pc_addr_before_call(__event_wait_signal(sig_src, sig_mask, time_ms))			
-			
-#endif /* EVENT_H_ */
+void __event_wait_signal(uint8_t volatile *sig_src, uint8_t sig_mask, uint16_t time_ms)
+{
+	uint8_t signal_src, irq_flag;
+	
+	irq_flag = rtos_cli();
+	signal_src = *sig_src;
+	rtos_sei(irq_flag);
+	
+	if((signal_src&sig_mask) != sig_mask){
+		if(time_ms){
+			__task_delay(time_ms);
+		}
+		rtos_back_jump();
+	}
+}

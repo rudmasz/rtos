@@ -7,7 +7,7 @@
 #include <avr/io.h>
 #include <string.h>
 #include "rtos.h"
-#include "semaphore.h"
+
 
 #define FREE_BLOCK_MARKER	0
 

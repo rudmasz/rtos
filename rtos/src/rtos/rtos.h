@@ -7,6 +7,7 @@
 #include "timers.h"
 #include "board.h"
 #include "errCode.h"
+#include "event.h"
 
 #ifndef RUN_TESTS
 	#define RTOS_static	static
@@ -47,7 +48,6 @@
 #define RTOS_stack_overflow_tag_size		2
 #define RTOS_stack_overflow_tag				0xCA
 #define RTOS_err_out_of_dynamic_mem			0x80
-#define RTOS_err_sleep_time					0x14															//CZAS USPIENIA TASKU BEDACEGO ZRODLEM BLEDU
 
 #ifndef F_CPU
 	#define F_CPU	BOARD_cpu_clock

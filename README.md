@@ -43,19 +43,21 @@ This allows flexible and application-specific handling of reset conditions.
 The heap is divided into fixed-sized blocks, where the size of each block is defined by the parameter `BOARD_heap_single_block_size`. The total number of blocks available in the heap is determined by `BOARD_heap_number_of_blocks`. Allocated memory from the heap is always rounded up to the nearest multiple of the block size.
 
 **Heap Initialization**
-The heap is initialized using the `heap_init` function. This sets up the internal structures, such as allocation markers and free block counters, and prepares a semaphore to guard memory operations.
+
+The heap is initialized using the `heap_init()` function. This sets up the internal structures, such as allocation markers and free block counters, and prepares a semaphore to guard memory operations.
 
 **Dynamic Memory Allocation**:
-- The `heap_malloc` function allows the allocation of a specified number of bytes in the heap. It rounds up the requested size to the nearest multiple of the block size, ensuring that memory is always allocated in whole blocks.
+- The `heap_malloc(byte_num)` function allows the allocation of a specified number of bytes in the heap. It rounds up the requested size to the nearest multiple of the block size, ensuring that memory is always allocated in whole blocks.
 - If sufficient contiguous blocks are not available, the function returns `NULL`.
-- The `condWait_heap_malloc` macro enhances `heap_malloc` by adding task-waiting behavior. If memory is unavailable, the calling task is added to a waiting queue until memory becomes available. **This function must only be called within a task context**; otherwise, it can cause a memory leak and trigger a system reset.
+- The `condWait_heap_malloc(byte_num)` macro enhances `heap_malloc(byte_num)` by adding task-waiting behavior. If memory is unavailable, the calling task is added to a waiting queue until memory becomes available. **This function must only be called within a task context**; otherwise, it can cause a memory leak and trigger a system reset.
 
 **Memory Deallocation**
-Memory allocated via the heap can be freed using the `heap_free` function. It releases all blocks associated with a given memory address back to the heap and wakes up any tasks waiting for free memory.
+
+Memory allocated via the heap can be freed using the `heap_free(mem_addr)` function. It releases all blocks associated with a given memory address back to the heap and wakes up any tasks waiting for free memory.
   
 **Heap Status and Validation**:
-- The `heap_get_size_of_free_memory` function returns the total size of free memory currently available in the heap.
-- The `heap_check_if_dynamic_mem` function verifies whether a given memory address falls within the heap’s managed range, returning `TRUE` or `FALSE`.
+- The `heap_get_size_of_free_memory()` function returns the total size of free memory currently available in the heap.
+- The `heap_check_if_dynamic_mem(mem_addr)` function verifies whether a given memory address falls within the heap’s managed range, returning `TRUE` or `FALSE`.
 
 **Internal Mechanics**:
 - Memory is managed using an array of allocation markers, where each marker corresponds to a block in the heap. A block marked as free is identified with `FREE_BLOCK_MARKER`. When memory is allocated, contiguous blocks are marked with a unique identifier derived from the starting block index.
@@ -75,6 +77,7 @@ The timer module provides functionality for creating and managing software timer
 -   Implements default arguments through the VRG macro for some functions.
 
 **Starting a Timer**
+
 &emsp;Timers can be started using convenience macros:
 
 -   `timer_start_notify_task(timer, tcnt, listener)`: Notifies a task `listener` after tcnt milliseconds.
@@ -82,14 +85,15 @@ The timer module provides functionality for creating and managing software timer
 -   `timer_start(timer, tcnt)`: Starts a timer without notifications.
 
 **Stopping a Timer**
+
 &emsp;A running timer can be stopped using the corresponding macros:
 -   `timer_stop_Notify(timer)`: Stops the timer and triggers notification.
 -   `timer_stop(timer)`: Stops the timer without notification.
   
 **Retrieving Timer Information**:
-- `timer_get_time`: Get remaining time.
-- `timer_cmp_timers_time`: Compare two timers.
-- `timer_is_counting_down`: Check if a timer is counting down.  
+- `timer_get_time(timer)`: Get remaining time.
+- `timer_cmp_timers_time(timer1, timer2)`: Compare two timers.
+- `timer_is_counting_down(timer)`: Check if a timer is counting down.  
 ---
 ### 3.  **Semaphores and Mutexes**
 
@@ -103,41 +107,41 @@ Both semaphores and mutexes maintain pending task lists for cases where resource
 **Semaphores**:
 
 - **Initialization**
-	Semaphores are initialized with `semaphore_init()` (or its macro forms). This function allows specifying the maximum count and initial count of the semaphore. A default argument mechanism (`VRG` macro) enables optional initialization with default values, where the initial count defaults to the maximum count.
+	Semaphores are initialized with `semaphore_init(sem, max_count, init_count)` (or its macro forms). This function allows specifying the maximum count and initial count of the semaphore. A default argument mechanism (`VRG` macro) enables optional initialization with default values, where the initial count defaults to the maximum count.
 
 - **Accessing Semaphore Information**:
-	- `semaphore_get_count()` retrieves the current count of a semaphore.
-	- `semaphore_get_max_count()` retrieves the maximum count value.
-	- `semaphore_is_pending_list_empty()` checks whether the semaphore’s pending task list is empty.
+	- `semaphore_get_count(sem)` retrieves the current count of a semaphore.
+	- `semaphore_get_max_count(sem)` retrieves the maximum count value.
+	- `semaphore_is_pending_list_empty(sem)` checks whether the semaphore’s pending task list is empty.
 
 - **Usage**:
-	- `semaphore_wait()`: Decrements the semaphore count to gain access to a resource. Returns `TRUE` if access is granted or `FALSE` if unavailable.
-	- `semaphore_signal()`: Increments the semaphore count to release access to a resource. If tasks are pending, it wakes the next task in the queue.
-	- `semaphore_remove_from_pending_list()`: Removes a specific task from the semaphore’s pending task list.
+	- `semaphore_wait(sem)`: Decrements the semaphore count to gain access to a resource. Returns `TRUE` if access is granted or `FALSE` if unavailable.
+	- `semaphore_signal(sem)`: Increments the semaphore count to release access to a resource. If tasks are pending, it wakes the next task in the queue.
+	- `semaphore_remove_from_pending_list(task, sem)`: Removes a specific task from the semaphore’s pending task list.
 
 **Mutexes**:
 - **Initialization**
-	Mutexes are initialized with `mutex_init()`, which sets them up as ownership-based semaphores.
+	Mutexes are initialized with `mutex_init(mutex)`, which sets them up as ownership-based semaphores.
 	
 - **Accessing Mutex Information**
-	`mutex_is_pending_list_empty()` checks if the mutex has tasks waiting for access. This is implemented using the semaphore equivalent.
+	`mutex_is_pending_list_empty(mutex)` checks if the mutex has tasks waiting for access. This is implemented using the semaphore equivalent.
 	
 - **Usage**:
-	- `mutex_check_access()`: Checks if a given task (defaulting to the current task) owns the mutex.
-	- `mutex_unlock()`: Releases the mutex, transferring ownership to the next waiting task if applicable.
-	- `mutex_remove_from_pending_list()`: Removes a task from the pending list for a mutex.  
+	- `mutex_check_access(mutex, task)`: Checks if a given task (defaulting to the current task) owns the mutex.
+	- `mutex_unlock(mutex, task)`: Releases the mutex, transferring ownership to the next waiting task if applicable.
+	- `mutex_remove_from_pending_list(task, mutex)`: Removes a task from the pending list for a mutex.  
 
 **`condWait` Functions**
 The system provides specialized macros for tasks that need to freeze execution until they acquire a semaphore or mutex:
-- **`condWait_semaphore_wait()`**: This macro allows tasks to wait for semaphore access. It freezes the calling task until the semaphore becomes available.
-- **`condWait_mutex_lock()`**: This macro allows tasks to wait for mutex access. The task freezes until it successfully locks the mutex.
+- **`condWait_semaphore_wait(sem)`**: This macro allows tasks to wait for semaphore access. It freezes the calling task until the semaphore becomes available.
+- **`condWait_mutex_lock(mutex)`**: This macro allows tasks to wait for mutex access. The task freezes until it successfully locks the mutex.
 
 **General Workflow**:
 1. **Initialization**: Create and initialize semaphores or mutexes.
 2. **Task Interaction**:
-	- Use `semaphore_wait()` or `condWait_semaphore_wait()` to acquire a semaphore.
-	- Use `mutex_lock()` or `condWait_mutex_lock()` to acquire a mutex.
-	- Release resources with `semaphore_signal()` or `mutex_unlock()`.
+	- Use `semaphore_wait(sem)` or `condWait_semaphore_wait(sem)` to acquire a semaphore.
+	- Use `condWait_mutex_lock(mutex)` to acquire a mutex.
+	- Release resources with `semaphore_signal(sem)` or `mutex_unlock(mutex)`.
 3. **Pending Lists**: If tasks cannot immediately access a resource, they are added to the pending list and frozen until the resource becomes available.
 ---
 
@@ -146,14 +150,15 @@ This system implements an event-driven notification mechanism. Its primary funct
 
 **Event Actions (`event_action_t`)**:
 - The system uses `event_action_t` (a typedef of `semaphore_t`) as the primary structure to manage event notifications.
-- Event actions are initialized using `event_action_init`, which prepares them to notify multiple tasks. This function ensures the event action is set up with an internal semaphore initialized to handle two states and no initial signals.
+- Event actions are initialized using `event_action_init(action)`, which prepares them to notify multiple tasks. This function ensures the event action is set up with an internal semaphore initialized to handle two states and no initial signals.
 
 **Task Notification System**
-The function `event_action_notify_listeners` wakes up all tasks that are waiting on a specific action. This allows multiple tasks to be informed and proceed when an event occurs.
+
+The function `event_action_notify_listeners(sender)` wakes up all tasks that are waiting on a specific action. This allows multiple tasks to be informed and proceed when an event occurs.
 
 **`condWait` Condition-Based Waiting**:
-- The macro `condWait_event_action_wait` allows a task to suspend its execution and add itself to the list of tasks waiting for an action. This ensures a task will only resume once the associated event action is triggered.
-- The macro `condWait_event_wait_signal` suspends the execution of the calling task until a specific condition is met, defined as `*sig_src & sig_mask == sig_mask`. If the condition isn't met, and `time_ms` is non-zero, the task is also put into a timed suspension before checking the condition again. This ensures that tasks can wait for both precise conditions and timed delays.
+- The macro `condWait_event_action_wait(sender)` allows a task to suspend its execution and add itself to the list of tasks waiting for an action. This ensures a task will only resume once the associated event action is triggered.
+- The macro `condWait_event_wait_signal(sig_src, sig_mask, time_ms)` suspends the execution of the calling task until a specific condition is met, defined as `*sig_src & sig_mask == sig_mask`. If the condition isn't met, and `time_ms` is non-zero, the task is also put into a timed suspension before checking the condition again. This ensures that tasks can wait for both precise conditions and timed delays.
 ---
 
 ### 5. **Task Management**
@@ -161,6 +166,7 @@ The function `event_action_notify_listeners` wakes up all tasks that are waiting
 This system provides mechanisms for task creation, scheduling, suspension, and synchronization. The system supports both statically allocated tasks and dynamically allocated tasks in heap memory.
 
 **Task States**
+
 Each task in the system can exist in one of the following states:
 <table>
   <tr>
@@ -202,24 +208,27 @@ Each task in the system can exist in one of the following states:
 </table>
 
 **Task Structure**
+
 Each task is represented by a task_handle_t structure, which contains:
 <table>  <tr>  <th><small>Task Attribute</small></th>  <th><small>Description</small></th>  </tr>  <tr>  <td><small><b>PC (Program Counter)</b></small></td>  <td><small>Execution address for resuming the task.</small></td>  </tr><tr>  <td><small><b>code_addr</b></small></td>  <td><small>Initial address of the task function.</small></td>  </tr><tr>  <td><small><b>State Variables</b></small></td>  <td><small>Stores task state and condition-related data.</small></td>  </tr>  <tr>  <td><small><b>Family Relationships</b></small></td>  <td><small>Parent-child relationships for dependencies.</small></td>  </tr>  <tr>  <td><small><b>Linked List Pointers</b></small></td>  <td><small>Supports a doubly linked list for scheduling.</small></td>  </tr>  <tr>  <td><small><b>Mutex List Pointer</b></small></td>  <td><small>Keeps track of the first held mutex.</small></td>  </tr>  <tr>  <td><small><b>Destructor Function</b></small></td>  <td><small>Cleanup function called upon task deletion.</small></td>  </tr>  </table>
 
 For dynamically allocated tasks, `task_dynamic_handle_t` extends task_handle_t by providing extra memory space (`variables[]`) that tasks can use.
 
 **Task Handling and Scheduling**
+
 The system uses a **doubly linked list** to manage tasks. The ready task queue follows a **circular linked list** structure, where:
 -   The currently running task points to the next task to be executed.
 -   Tasks can be added/removed from the list dynamically.
 
 **Key Task Management Functions**:
--  **task_init()** – Initializes task-related structures.
--  **task_setup()** – Initializes a new task.
--  **task_new()** – Creates a new task dynamically in heap memory.
--  **task_start()** – Starts or resumes a task.
-- **task_erase()** – Deletes a task and optionally frees memory.
+-  **`task_init()`** – Initializes task-related structures.
+-  **`task_setup(task, task_code_addr, destructor_call_addr)`** – Initializes a new task.
+-  **`task_new(task_code_addr, destructor_call_addr)`** – Creates a new task dynamically in heap memory.
+-  **`task_start(task)`** – Starts or resumes a task.
+-  **`task_erase(if_permanent, task)`** – Deletes a task and optionally frees memory.
 
 **Task Context and Local Variables**
+
 The system does **not** save the CPU registers and stack of a task when switching between tasks. Instead, **only the program counter (PC)** is stored in the task handle. Because of this:
 
 -   **Local variables should be avoided** in the task body, as their values will be lost when the task is switched.
@@ -227,6 +236,7 @@ The system does **not** save the CPU registers and stack of a task when switchin
 -   **Static local variables with the `volatile` modifier** can also be used to store persistent task data.
 
 **Dynamic Memory Management**
+
 If a task handler is allocated in heap memory, **additional memory** is available due to rounding the allocated size to the `BOARD_heap_single_block_size`. The number of extra available bytes is defined as `TASK_number_of_dynamic_variables`.
 
 To use this extra space, a user must:
@@ -256,6 +266,7 @@ In this example:
 -   The `TASK_do` and `TASK_loop()` macros create a loop in which the task sleeps for 100 ms, assigns the value of `ptr->led` to the `PORTD` register, and increments `ptr->led`.
 
 **Interrupt Handling**
+
 Tasks can be paused until an external interrupt is triggered using  `condWait_task_wait_irq(irq_nr)`, which halts execution until the specified interrupt occurs.
 
 **Task Dependencies**

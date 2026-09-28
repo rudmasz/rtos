@@ -293,7 +293,7 @@ void init_tests(void)
 	
 /****** SYSTEM TIME ******/
 	__rtos_system_time = 3456;
-	TEST(rtos_get_system_time_ms() == __rtos_system_time);
+	TEST(rtos_get_system_time_ms() == __timer_ticks_to_ms(__rtos_system_time));	//the system time is kept in ticks
 
 /****** INTERRUPTS ******/
 	sei();

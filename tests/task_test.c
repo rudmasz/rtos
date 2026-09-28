@@ -24,7 +24,10 @@ static task_dynamic_handle_t *task_local_var;
 static uint32_t local_task_var;
 
 
-__attribute__((noinline)) void test_task_save_context_variables(void)
+// The dynamic variables are handled in separate functions so that the task
+// itself has no local variables and therefore no stack frame: CALL_TASK
+// resumes it in the middle, past the prologue, and then lets it return.
+__attribute__((noinline)) static void test_task_save_variables(void)
 {
 	struct my_data{
 		union{
@@ -40,8 +43,31 @@ __attribute__((noinline)) void test_task_save_context_variables(void)
 
 	TASK_init_dynamic_variables_pointer(my_data, sv);
 	sv->val1_4 = local_task_var;
-	task_update_pc_addr_before_call(task_this);
+}
+
+__attribute__((noinline)) static void test_task_restore_variables(void)
+{
+	struct my_data{
+		union{
+			struct{
+				uint8_t val1;
+				uint8_t val2;
+				uint8_t val3;
+				uint8_t val4;
+			};
+			uint32_t val1_4;
+		};
+	};
+
+	TASK_init_dynamic_variables_pointer(my_data, sv);
 	local_task_var = sv->val1_4;
+}
+
+__attribute__((noinline)) void test_task_save_context_variables(void)
+{
+	test_task_save_variables();
+	task_update_pc_addr_before_call(task_this);
+	test_task_restore_variables();
 }
 
 /********************* new task ********************/
@@ -303,26 +329,27 @@ void task_test(void)
 	TEST(task_check_relationship(test_rtos_task_handle(0), test_rtos_task_handle(1)) == FALSE);	//should be no relationship
 	
 	//a descendant must not erase its ancestor
+	//tasks 1-3 start from the beginning (erased above), task 0 would resume after its join
 	child_step = TEST_TASK_JOIN_JOIN_CHILD;
-	for(uint8_t i=0; i<2; i++){
+	for(uint8_t i=1; i<3; i++){
 		task_to_join = test_rtos_task_handle(i+1);
-		CALL_TASK(test_rtos_task_handle(i));				//chain 0 -> 1 -> 2
+		CALL_TASK(test_rtos_task_handle(i));				//chain 1 -> 2 -> 3
 	}
 	child_step = TEST_TASK_JOIN_ERASE_ANCESTOR;
-	task_to_erase = test_rtos_task_handle(0);
-	CALL_TASK(test_rtos_task_handle(2));					//grandchild tries to stop grandparent - refused
 	task_to_erase = test_rtos_task_handle(1);
-	CALL_TASK(test_rtos_task_handle(2));					//child tries to stop parent - refused
-	TEST(test_rtos_task_handle(0)->state == JOIN);
+	CALL_TASK(test_rtos_task_handle(3));					//grandchild tries to stop grandparent - refused
+	task_to_erase = test_rtos_task_handle(2);
+	CALL_TASK(test_rtos_task_handle(3));					//child tries to stop parent - refused
 	TEST(test_rtos_task_handle(1)->state == JOIN);
-	TEST(task_check_relationship(test_rtos_task_handle(0), test_rtos_task_handle(1)));
+	TEST(test_rtos_task_handle(2)->state == JOIN);
 	TEST(task_check_relationship(test_rtos_task_handle(1), test_rtos_task_handle(2)));
+	TEST(task_check_relationship(test_rtos_task_handle(2), test_rtos_task_handle(3)));
 	
 	//clean up from the bottom, every task deletes itself
 	child_step = TEST_TASK_JOIN_DELETE_CHILD;
+	CALL_TASK(test_rtos_task_handle(3));					//task 2 woken up
 	CALL_TASK(test_rtos_task_handle(2));					//task 1 woken up
-	CALL_TASK(test_rtos_task_handle(1));					//task 0 woken up
-	TEST(test_rtos_task_handle(0)->state == READY);
+	TEST(test_rtos_task_handle(1)->state == READY);
 	
 	/****** SAVE TASK CONTEXT AND LOCAL VARIABLES ******/
 	task_local_var = task_new(test_task_save_context_variables);

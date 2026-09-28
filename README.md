@@ -57,7 +57,7 @@ Memory allocated via the heap can be freed using the `heap_free(mem_addr)` funct
   
 **Heap Status and Validation**:
 - The `heap_get_size_of_free_memory()` function returns the total size of free memory currently available in the heap.
-- The `heap_check_if_dynamic_mem(mem_addr)` function verifies whether a given memory address falls within the heap’s managed range, returning `TRUE` or `FALSE`.
+- The `heap_check_if_dynamic_mem(mem_addr)` function verifies whether a given memory address falls within the heapâ€™s managed range, returning `TRUE` or `FALSE`.
 
 **Internal Mechanics**:
 - Memory is managed using an array of allocation markers, where each marker corresponds to a block in the heap. A block marked as free is identified with `FREE_BLOCK_MARKER`. When memory is allocated, contiguous blocks are marked with a unique identifier derived from the starting block index.
@@ -91,7 +91,7 @@ The timer module provides functionality for creating and managing software timer
 -   `timer_stop(timer)`: Stops the timer without notification.
   
 **Retrieving Timer Information**:
-- `timer_get_time(timer)`: Get remaining time.
+- `timer_get_time(timer)`: Get remaining time in milliseconds.
 - `timer_cmp_timers_time(timer1, timer2)`: Compare two timers.
 - `timer_is_counting_down(timer)`: Check if a timer is counting down.  
 ---
@@ -112,12 +112,12 @@ Both semaphores and mutexes maintain pending task lists for cases where resource
 - **Accessing Semaphore Information**:
 	- `semaphore_get_count(sem)` retrieves the current count of a semaphore.
 	- `semaphore_get_max_count(sem)` retrieves the maximum count value.
-	- `semaphore_is_pending_list_empty(sem)` checks whether the semaphore’s pending task list is empty.
+	- `semaphore_is_pending_list_empty(sem)` checks whether the semaphoreâ€™s pending task list is empty.
 
 - **Usage**:
 	- `semaphore_wait(sem)`: Decrements the semaphore count to gain access to a resource. Returns `TRUE` if access is granted or `FALSE` if unavailable.
 	- `semaphore_signal(sem)`: Increments the semaphore count to release access to a resource. If tasks are pending, it wakes the next task in the queue.
-	- `semaphore_remove_from_pending_list(task, sem)`: Removes a specific task from the semaphore’s pending task list.
+	- `semaphore_remove_from_pending_list(task, sem)`: Removes a specific task from the semaphoreâ€™s pending task list, e.g. on a wait timeout. The task is left in infinite sleep; once started again it resumes after `condWait_semaphore_wait()` **without** the resource, so it must check by itself (e.g. a flag set by the timer) whether it woke up on timeout.
 
 **Mutexes**:
 - **Initialization**
@@ -129,7 +129,7 @@ Both semaphores and mutexes maintain pending task lists for cases where resource
 - **Usage**:
 	- `mutex_check_access(mutex, task)`: Checks if a given task (defaulting to the current task) owns the mutex.
 	- `mutex_unlock(mutex, task)`: Releases the mutex, transferring ownership to the next waiting task if applicable.
-	- `mutex_remove_from_pending_list(task, mutex)`: Removes a task from the pending list for a mutex.  
+	- `mutex_remove_from_pending_list(task, mutex)`: Removes a task from the pending list for a mutex, e.g. on a wait timeout. Once started again the task resumes after `condWait_mutex_lock()` **without** owning the mutex, so it should check `mutex_check_access()` first.  
 
 **`condWait` Functions**
 The system provides specialized macros for tasks that need to freeze execution until they acquire a semaphore or mutex:
@@ -221,11 +221,11 @@ The system uses a **doubly linked list** to manage tasks. The ready task queue f
 -   Tasks can be added/removed from the list dynamically.
 
 **Key Task Management Functions**:
--  **`task_init()`** – Initializes task-related structures.
--  **`task_setup(task, task_code_addr, destructor_call_addr)`** – Initializes a new task.
--  **`task_new(task_code_addr, destructor_call_addr)`** – Creates a new task dynamically in heap memory.
--  **`task_start(task)`** – Starts or resumes a task.
--  **`task_erase(if_permanent, task)`** – Deletes a task and optionally frees memory.
+-  **`task_init()`** â€“ Initializes task-related structures.
+-  **`task_setup(task, task_code_addr, destructor_call_addr)`** â€“ Initializes a new task.
+-  **`task_new(task_code_addr, destructor_call_addr)`** â€“ Creates a new task dynamically in heap memory.
+-  **`task_start(task)`** â€“ Starts or resumes a task.
+-  **`task_erase(if_permanent, task)`** â€“ Deletes a task and optionally frees memory.
 
 **Task Context and Local Variables**
 
@@ -271,18 +271,18 @@ Tasks can be paused until an external interrupt is triggered using  `condWait_ta
 
 **Task Dependencies**
 Tasks can have parent-child relationships:
--   `condWait_task_join(child_task)` – Puts the current task to sleep until child_task completes.
--   `condWait_task_try_to_join(child_task)` – Similar, but exits if joining is not possible.
--   `task_check_relationship(parent, child)` – Checks if a child task is a descendant of a parent task.
+-   `condWait_task_join(child_task)` â€“ Puts the current task to sleep until child_task completes.
+-   `condWait_task_try_to_join(child_task)` â€“ Similar, but exits if joining is not possible.
+-   `task_check_relationship(parent, child)` â€“ Checks if a child task is a descendant of a parent task.
 
 **Task Delay and Sleep**:
--   `condWait_task_delay(time_ms)` – Suspends the current task for a given time.
--   `condWait_task_infinite_sleep()` – Puts the task to **permanent sleep** without waking the parent.
--   `condWait_task_infinite_sleep_wup()` – Similar, but wakes up the parent.
+-   `condWait_task_delay(time_ms)` â€“ Suspends the current task for a given time.
+-   `condWait_task_infinite_sleep()` â€“ Puts the task to **permanent sleep** without waking the parent.
+-   `condWait_task_infinite_sleep_wup()` â€“ Similar, but wakes up the parent.
 
 **Task Termination**:
--   `task_delete(task)` – Deletes a task and frees its handler memory.
--   `task_stop(task)` – Stops a task but keeps its handler memory.
+-   `task_delete(task)` â€“ Deletes a task and frees its handler memory.
+-   `task_stop(task)` â€“ Stops a task but keeps its handler memory.
 ---
 
 ### 6. **System Startup and Configuration**
@@ -294,7 +294,7 @@ The RTOS framework enables users to define and execute tasks with scheduling cap
     -   Initialize the system.
     -   Define and start tasks.
     -   Use timers for periodic events.
--   **board.h**: Defines essential hardware-related constants for system configuration.  **This file must be created and included by the user**; otherwise, compilation will fail.
+-   **board.h**: Defines essential hardware-related constants for system configuration.  **This file must be supplied by the application**; otherwise, compilation will fail. In this repository each example carries its own, next to its `main.c` -- see [Building and Debugging](#8-building-and-debugging).
     
 
 **Constants Defined in board.h**
@@ -312,7 +312,7 @@ The board.h file contains essential definitions for system configuration:
 | `BOARD_watch_dog_time`             | Watchdog timer reset interval                             | `WDTO_500MS (500 ms)`    |
 | `BOARD_cpu_clock`                  | CPU clock frequency (Hz)                                  | `14745600 (14.7456 MHz)` |
 | `BOARD_include_timers`             | Enables timer functionality (`TRUE` or `FALSE`)          | `TRUE`                   |
-| `BOARD_has_external_clock_input`   | Indicates if an external 32.768 kHz oscillator is connected (`TRUE` or `FALSE`) | `FALSE` |
+| `BOARD_has_external_clock_input`   | `TRUE` - an external 32.768 kHz clock signal drives TOSC1 (EXCLK); `FALSE` - a 32.768 kHz crystal sits on TOSC1/TOSC2. One of the two is required | `FALSE` |
 
 
 Users can modify these constants to suit their specific hardware and application needs.
@@ -392,7 +392,114 @@ Many functions in this system are extended using a default argument mechanism im
 
 ---
 
-### 8. **TODO List (Planned Enhancements)**
+### 8. **Building and Debugging**
+
+The project builds with CMake. Atmel Studio is not required and not supported --
+the build runs on macOS, Linux and Windows alike.
+
+**Requirements**
+
+| | |
+|---|---|
+| `avr-gcc` | 15.x recommended. Older versions work, but GCC 10 changed `-fcommon` to `-fno-common` and GCC 13 added `-Wenum-int-mismatch`; the sources are written for the newer behaviour |
+| `cmake` | 3.20 or later, for `CMakePresets.json` support |
+| VS Code | optional. `.vscode/` ships recommended extensions and ready debug configurations |
+
+On macOS the toolchain comes from Homebrew:
+
+```sh
+brew install osx-cross/avr/avr-gcc@15 osx-cross/avr/avr-gdb
+```
+
+`avr-gcc@15` is keg-only, so add it to `PATH` explicitly. Put the export **after**
+`brew shellenv` in `.zprofile`, otherwise Homebrew's own prepend shadows it.
+
+**Building**
+
+```sh
+cmake --preset atmega1284            # configure
+cmake --build --preset atmega1284    # build
+```
+
+Output lands in `build/<preset>/`: the ELF, an Intel HEX, a disassembly listing
+and a linker map. Each preset gets its own directory, so switching MCU can never
+mix object files from different targets.
+
+| preset | what it builds |
+|---|---|
+| `atmega1284` | the `blink` example against the RTOS |
+| `atmega1284-tests` | same, with the built-in test suite compiled in |
+
+Each example owns its hardware description: `examples/<name>/` holds both
+`main.c` and the `board.h` it is built against, so one directory is the whole
+story. A product built on this platform keeps its own `board.h` the same way.
+
+To build a different example, point `EXAMPLE` at its directory -- from the
+command line, or with a preset of its own:
+
+```sh
+cmake --preset atmega1284 -DEXAMPLE=modbus-node
+```
+
+One configuration builds one example, because the RTOS library is compiled
+against that example's `board.h`. Both `EXAMPLE` and `MCU` are validated at
+configure time.
+
+In VS Code the same thing happens on `F7`, with the preset picked from the status
+bar.
+
+**Debugging**
+
+Two configurations are provided, both driven by
+[PyAvrOCD](https://pyavrocd.io/) as the GDB server:
+
+| configuration | needs |
+|---|---|
+| `AVR: simavr (no hardware)` | nothing -- PyAvrOCD starts `simavr` and bridges it to GDB |
+| `AVR: Atmel-ICE (JTAG)` | an Atmel-ICE wired to the JTAG header |
+
+```sh
+brew install pipx && pipx install pyavrocd
+brew install simavr                        # for the simulator configuration
+```
+
+Pick the configuration in **Run and Debug** and start it there. The bug icon on
+the CMake status bar is a different mechanism that looks for `lldb` next to the
+compiler; it does not apply to AVR.
+
+> **Breakpoints inside tasks.** A task body is entered by the scheduler through
+> `ijmp` to a saved program counter, and `TASK_loop()` jumps back to a label
+> inside the function -- never through a normal call. A breakpoint on the task
+> prologue therefore fires exactly once and then never again. Put breakpoints
+> inside the `TASK_do { ... } TASK_loop()` body.
+
+Under `RUN_SIMULATOR` the system tick runs from the CPU clock with a /32
+prescaler instead of the asynchronous 32.768 kHz crystal, so simulated time
+passes roughly fourteen times faster than on hardware. Fine for logic, not for
+timing measurements.
+
+**Peripheral register view**
+
+`debug/ATmega1284P.svd` describes the device's I/O registers, and the debug
+configurations point at it through `svdPath`. With a peripheral viewer extension
+installed, registers appear with their individual bits during a session.
+
+The file comes from the [PyAvrOCD](https://github.com/felias-fogg/PyAvrOCD)
+project (MIT, Copyright (c) 2025-2026 Bernhard Nebel), which publishes SVD
+descriptions for roughly 300 AVR devices, generated from Microchip's ATDF files
+and patched for AVR's segmented address space. Download the `svd.tar.gz` asset
+from its releases page when retargeting to another MCU.
+
+> Two AVR specifics make hand-written SVD files fail. GDB maps flash at
+> `0x000000` and SRAM/IO at `0x800000`, so `baseAddress` must carry that offset
+> or the viewer reads the interrupt vector table instead of registers. And each
+> peripheral needs `<addressBlock>` entries: without them the viewer cannot work
+> out which ranges to read and falls back to address arithmetic that breaks on
+> AVR's 16-bit pointers.
+
+---
+
+### 9. **TODO List (Planned Enhancements)**
 
 - [ ] `ADC + NTC10K`: Implement analog-to-digital conversion support with NTC10K temperature sensors.  
 - [ ] `1-Wire Interface (Interrupt-Based)`: Optimize CPU usage by handling 1-Wire protocol via interrupts.  

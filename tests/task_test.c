@@ -84,8 +84,10 @@ static void test_task_delay(void)
 #define TEST_TASK_JOIN_DELETE_CHILD								2
 #define TEST_TASK_JOIN_SLEEP_INFINITE_CHILD						3
 #define TEST_TASK_JOIN_SLEEP_INFINITE_CHILD_WAKE_UP_PARENT		4
+#define TEST_TASK_JOIN_ERASE_ANCESTOR							5
 
 static task_handle_t *task_to_join;
+static task_handle_t *task_to_erase;
 static volatile uint8_t child_step;
 
 
@@ -106,6 +108,9 @@ __attribute__((noinline)) static void test_task_join_child(void)
 		
 	}else if(child_step == TEST_TASK_JOIN_SLEEP_INFINITE_CHILD_WAKE_UP_PARENT){
 		condWait_task_infinite_sleep_wup();
+		
+	}else if(child_step == TEST_TASK_JOIN_ERASE_ANCESTOR){
+		task_stop(task_to_erase);
 	}
 }
 
@@ -296,6 +301,28 @@ void task_test(void)
 	TEST(test_rtos_task_handle(0)->state == READY);
 	TEST(task_check_relationship(test_rtos_task_handle(1), test_rtos_task_handle(2)) == FALSE);	//should be no relationship
 	TEST(task_check_relationship(test_rtos_task_handle(0), test_rtos_task_handle(1)) == FALSE);	//should be no relationship
+	
+	//a descendant must not erase its ancestor
+	child_step = TEST_TASK_JOIN_JOIN_CHILD;
+	for(uint8_t i=0; i<2; i++){
+		task_to_join = test_rtos_task_handle(i+1);
+		CALL_TASK(test_rtos_task_handle(i));				//chain 0 -> 1 -> 2
+	}
+	child_step = TEST_TASK_JOIN_ERASE_ANCESTOR;
+	task_to_erase = test_rtos_task_handle(0);
+	CALL_TASK(test_rtos_task_handle(2));					//grandchild tries to stop grandparent - refused
+	task_to_erase = test_rtos_task_handle(1);
+	CALL_TASK(test_rtos_task_handle(2));					//child tries to stop parent - refused
+	TEST(test_rtos_task_handle(0)->state == JOIN);
+	TEST(test_rtos_task_handle(1)->state == JOIN);
+	TEST(task_check_relationship(test_rtos_task_handle(0), test_rtos_task_handle(1)));
+	TEST(task_check_relationship(test_rtos_task_handle(1), test_rtos_task_handle(2)));
+	
+	//clean up from the bottom, every task deletes itself
+	child_step = TEST_TASK_JOIN_DELETE_CHILD;
+	CALL_TASK(test_rtos_task_handle(2));					//task 1 woken up
+	CALL_TASK(test_rtos_task_handle(1));					//task 0 woken up
+	TEST(test_rtos_task_handle(0)->state == READY);
 	
 	/****** SAVE TASK CONTEXT AND LOCAL VARIABLES ******/
 	task_local_var = task_new(test_task_save_context_variables);

@@ -113,7 +113,18 @@ void heap_test(void)
 	
 	/****** HEAP INIT ******/
 	TEST(heap_get_size_of_free_memory() == free_mem_size);
-	
+
+	/****** HEAP RANGE ******/
+	//allocate the whole heap at once, so ptr is its first byte and ptr + free_mem_size is one past its last byte
+	ptr = heap_malloc(free_mem_size);
+	TEST(ptr != NULL);
+	TEST(heap_check_if_dynamic_mem(ptr) == TRUE);
+	TEST(heap_check_if_dynamic_mem(ptr + free_mem_size - 1) == TRUE);	//last byte of the last block
+	TEST(heap_check_if_dynamic_mem(ptr + free_mem_size) == FALSE);		//first byte past the heap
+	TEST(heap_check_if_dynamic_mem(ptr - 1) == FALSE);					//last byte before the heap
+	heap_free(ptr);
+	TEST(heap_get_size_of_free_memory() == free_mem_size);
+
 	/****** MALLOC AND FREE ******/
 	//check 0 byte memory allocation
 	check_proper_byte_allocation(0, free_mem_size);

@@ -1,0 +1,40 @@
+{
+    // ---- CMake -----------------------------------------------------------
+    "cmake.useCMakePresets": "always",
+    // Do NOT add cmake.copyCompileCommands pointing at the project root:
+    // CMakeLists.txt puts a symlink there, and copying a file onto a symlink
+    // that points back at it truncates the original to zero bytes.
+
+    // ---- IntelliSense ----------------------------------------------------
+    // Primary source: CMake Tools hands cpptools the exact flags and compiler
+    // path taken from the active preset. Nothing machine-specific in the repo.
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+
+    // Fallback, used when CMake Tools is not driving the session, e.g. when a
+    // file is opened outside a configured CMake project.
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/compile_commands.json",
+    "C_Cpp.default.cStandard": "gnu99",
+
+    // ---- debugging -------------------------------------------------------
+    // memory-view needs to be told which debug type to attach to; without this
+    // its panel stays empty during a session.
+    "memory-view.trackDebuggers": ["cppdbg"],
+    "memory-view.memoryViewLocation": "panel",
+
+
+    // ---- editor ----------------------------------------------------------
+    // Headers in this project are C, not C++.
+    "files.associations": {
+        "*.h": "c",
+        "*.inc": "c"
+    },
+    // The sources are tab-indented; do not let VS Code guess otherwise and
+    // spray space-indented lines through the diffs.
+    "[c]": {
+        "editor.insertSpaces": false,
+        "editor.tabSize": 4,
+        "editor.detectIndentation": false
+    },
+    // Keep diffs limited to what actually changed.
+    "files.trimTrailingWhitespace": false
+}

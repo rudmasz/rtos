@@ -135,7 +135,7 @@ void __task_infinite_sleep(uint8_t wake_up);
 void * __task_new(void (*task_code_addr)(void), void (*destructor_call_addr)(task_handle_t *));
 void __task_refresh_delayed(uint16_t time_ms);
 void __task_refresh_interrupted(void);
-void __task_wait_for_irq(uint8_t irq_nr);
+void __task_wait_for_irq(rtos_peripheral_irq_t irq_nr);
 void __task_set_program_counter(uint16_t pc);
 void __task_switch(void);
 void * _task_new(void *(*heap_malloc_f)(uint16_t), void (*task_code_addr)(void), void (*destructor_call_addr)(task_handle_t *));

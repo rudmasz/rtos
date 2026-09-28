@@ -12,6 +12,11 @@
 
 static void _init(semaphore_t volatile *sem, uint8_t max_count, uint8_t init_count)
 {
+	// count shares a union with owner, which is a pointer and therefore wider.
+	// Writing count alone would leave the upper byte of owner untouched, and a
+	// mutex placed in .noinit or on the stack would then start out looking
+	// locked by a garbage task. Clear the whole union first.
+	sem->owner						= NULL;
 	sem->max_count					= max_count;
 	sem->count						= init_count;
 	sem->head_pending_tasks_list	= NULL;
@@ -156,6 +161,10 @@ int8_t semaphore_signal(semaphore_t *sem)
  * @fn	void semaphore_remove_from_pending_list(task_handle_t *task, semaphore_t *sem)
  *
  * @brief	the function removes the task from the semaphore waiting list. 
+ *			Intended for a wait timeout, e.g. called from a timer. The task is left in SLEEP_INFINITE
+ *			and, once started again, resumes right after condWait_semaphore_wait() as if it had taken
+ *			the semaphore - but it has NOT. The task itself must tell whether it woke up on timeout
+ *			(no resource) or normally (resource taken), e.g. with a flag set by the timer.
  *
  * @param		sem		pointer to the semaphore.
  *				task	pointer to the task.

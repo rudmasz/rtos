@@ -1,20 +1,16 @@
 #ifndef __RTOS_H_						
 #define	__RTOS_H_
 
-#include "task.h"
-#include "heap.h"
-#include "semaphore.h"
-#include "timers.h"
+/*
+ * Include order is deliberate:
+ *   board.h                 selects the device and supplies the BOARD_* values
+ *   common constants        TRUE/FALSE etc., used by the peripheral header
+ *   rtos_peripheral_<dev>.h defines rtos_peripheral_irq_t
+ *   module headers          task.h and friends, which use that enum
+ * Pulling the module headers in first would leave task.h without the interrupt
+ * type and force its interrupt API back onto a plain integer.
+ */
 #include "board.h"
-#include "errCode.h"
-#include "event.h"
-
-#ifndef RUN_TESTS
-	#define RTOS_static	static
-#else
-	#include "test.h"
-	#define RTOS_static
-#endif
 
 #ifndef NULL
 #define	NULL	(void *)0x00
@@ -83,7 +79,44 @@
 #error You have to specify the device type _for example '#define __AVR_ATmega1284__'
 #endif
 
+
+#include "task.h"
+#include "heap.h"
+#include "semaphore.h"
+#include "timers.h"
+#include "errCode.h"
+#include "event.h"
+
+#ifndef RUN_TESTS
+	#define RTOS_static	static
+#else
+	#include "test.h"
+	#define RTOS_static
+#endif
+
 void __rtos_wait_irq_val(rtos_peripheral_irq_t irq_nr);
+
+
+/**********************************************************************************************//**
+ * User-overridable hooks.
+ *
+ * Each one defaults to NULL and is called only when it is non-NULL, so defining
+ * any of them is optional. To install one, define it at file scope in your own
+ * translation unit; the strong definition wins over the library's weak default:
+ *
+ *		void my_init(void);
+ *		void (*rtos_initialize_avr_device)(void) = my_init;
+ *
+ * These declarations exist so the compiler checks your signature. Without them
+ * a mismatched type would only surface as strange behaviour at run time.
+ **************************************************************************************************/
+extern void (*rtos_response_on_brownout_reset)(void);
+extern void (*rtos_response_on_power_on_reset)(void);
+extern void (*rtos_response_on_jtag_reset)(void);
+extern void (*rtos_response_on_external_reset)(void);
+extern void (*rtos_initialize_avr_device)(void);
+extern void (*rtos_response_on_watchdog_reset)(task_handle_t *current_task);
+extern void (*rtos_response_on_error)(int8_t sign, uint32_t err_code);
 
 
 

@@ -80,3 +80,21 @@ ipch/
  
 # Visual Studio 6 workspace options file
 *.opt
+# ---- macOS ----
+.DS_Store
+
+# ---- CMake ----
+compile_commands.json
+CMakeUserPresets.json
+
+# ---- VS Code (project config is versioned, everything else is not) ----
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+
+# ---- clangd index ----
+.cache/
+
+# ---- debug/ holds the versioned SVD file; re-include it after [Dd]ebug/ above ----
+!/debug/

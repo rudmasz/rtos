@@ -112,6 +112,10 @@ int8_t semaphore_signal(semaphore_t *sem);
  * @fn	void semaphore_remove_from_pending_list(task_handle_t *task, semaphore_t *sem)
  *
  * @brief	the function removes the task from the semaphore waiting list. 
+ *			Intended for a wait timeout, e.g. called from a timer. The task is left in SLEEP_INFINITE
+ *			and, once started again, resumes right after condWait_semaphore_wait() as if it had taken
+ *			the semaphore - but it has NOT. The task itself must tell whether it woke up on timeout
+ *			(no resource) or normally (resource taken), e.g. with a flag set by the timer.
  *
  * @param		sem		pointer to the semaphore.
  *				task	pointer to the task.
@@ -178,6 +182,9 @@ uint8_t _mutex_check_access(mutex_t *mutex, struct task_handle *task);
  * @fn	void mutex_remove_from_pending_list(task_handle_t *task, mutex_t *mutex)
  *
  * @brief	the function removes the task from the mutex waiting list. 
+ *			Intended for a wait timeout, e.g. called from a timer. The task is left in SLEEP_INFINITE
+ *			and, once started again, resumes right after condWait_mutex_lock() without owning
+ *			the mutex. Check it with mutex_check_access() before touching the shared resource.
  *
  * @param		mutex	pointer to the mutex.
  *				task	pointer to the task.

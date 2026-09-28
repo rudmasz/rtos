@@ -36,6 +36,7 @@
  		#define __Err_DeviceSoftware_rtOS_DynamicMemoryBlockS	0x00040000	//Too big block
  		#define __Err_DeviceSoftware_rtOS_StackOverflowUp		0x00050000	//Stack overflow by task too many variables in task definition
  		#define __Err_DeviceSoftware_rtOS_StackOverflowDown		0x00060000	//Stack overflow by functions called from task too many variables in a functions definition or to many references to the function
+ 		#define __Err_DeviceSoftware_rtOS_AncestorErase			0x00070000	//Task tried to erase its own ancestor
 
 
 	#define __Err_DeviceSoftware_				0x00800000

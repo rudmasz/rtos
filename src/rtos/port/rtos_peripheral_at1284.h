@@ -6,7 +6,6 @@
 #endif
 
 
-
 #ifndef RAMSIZE
 	#define RAMSIZE 16384
 #endif
@@ -73,6 +72,7 @@ typedef enum{
 #define RTOS_peripheral_system_clock_OCRA					32
 #define RTOS_peripheral_system_clock_ticks_for_time(time_)	(( ((uint64_t)time_ * (uint64_t)RTOS_peripheral_system_clock_freq) / (RTOS_peripheral_system_clock_OCRA + 1) + 500) / 1000)
 
+#define RTOS_peripheral_system_clock_ticks_for_0x80000000ms		RTOS_peripheral_system_clock_ticks_for_time(0x80000000)
 #define RTOS_peripheral_system_clock_ticks_for_0x40000000ms		RTOS_peripheral_system_clock_ticks_for_time(0x40000000)
 #define RTOS_peripheral_system_clock_ticks_for_0x20000000ms		RTOS_peripheral_system_clock_ticks_for_time(0x20000000)
 #define RTOS_peripheral_system_clock_ticks_for_0x10000000ms		RTOS_peripheral_system_clock_ticks_for_time(0x10000000)
@@ -105,6 +105,43 @@ typedef enum{
 #define RTOS_peripheral_system_clock_ticks_for_0x0004ms		RTOS_peripheral_system_clock_ticks_for_time(0x0004)
 #define RTOS_peripheral_system_clock_ticks_for_0x0002ms		RTOS_peripheral_system_clock_ticks_for_time(0x0002)
 #define RTOS_peripheral_system_clock_ticks_for_0x0001ms		RTOS_peripheral_system_clock_ticks_for_time(0x0001)
+
+/* The other direction: system ticks back to milliseconds. Used by
+ * rtos_get_system_time_ms(); the core itself counts in ticks. */
+#define RTOS_peripheral_system_clock_ms_for_ticks(ticks_)	(( (uint64_t)ticks_ * (RTOS_peripheral_system_clock_OCRA + 1) * 1000 + RTOS_peripheral_system_clock_freq / 2) / RTOS_peripheral_system_clock_freq)
+
+#define RTOS_peripheral_system_clock_ms_for_0x80000000ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x80000000)
+#define RTOS_peripheral_system_clock_ms_for_0x40000000ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x40000000)
+#define RTOS_peripheral_system_clock_ms_for_0x20000000ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x20000000)
+#define RTOS_peripheral_system_clock_ms_for_0x10000000ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x10000000)
+#define RTOS_peripheral_system_clock_ms_for_0x08000000ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x08000000)
+#define RTOS_peripheral_system_clock_ms_for_0x04000000ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x04000000)
+#define RTOS_peripheral_system_clock_ms_for_0x02000000ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x02000000)
+#define RTOS_peripheral_system_clock_ms_for_0x01000000ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x01000000)
+#define RTOS_peripheral_system_clock_ms_for_0x00800000ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x00800000)
+#define RTOS_peripheral_system_clock_ms_for_0x00400000ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x00400000)
+#define RTOS_peripheral_system_clock_ms_for_0x00200000ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x00200000)
+#define RTOS_peripheral_system_clock_ms_for_0x00100000ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x00100000)
+#define RTOS_peripheral_system_clock_ms_for_0x00080000ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x00080000)
+#define RTOS_peripheral_system_clock_ms_for_0x00040000ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x00040000)
+#define RTOS_peripheral_system_clock_ms_for_0x00020000ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x00020000)
+#define RTOS_peripheral_system_clock_ms_for_0x00010000ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x00010000)
+#define RTOS_peripheral_system_clock_ms_for_0x00008000ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x00008000)
+#define RTOS_peripheral_system_clock_ms_for_0x00004000ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x00004000)
+#define RTOS_peripheral_system_clock_ms_for_0x00002000ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x00002000)
+#define RTOS_peripheral_system_clock_ms_for_0x00001000ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x00001000)
+#define RTOS_peripheral_system_clock_ms_for_0x00000800ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x00000800)
+#define RTOS_peripheral_system_clock_ms_for_0x00000400ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x00000400)
+#define RTOS_peripheral_system_clock_ms_for_0x00000200ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x00000200)
+#define RTOS_peripheral_system_clock_ms_for_0x00000100ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x00000100)
+#define RTOS_peripheral_system_clock_ms_for_0x00000080ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x00000080)
+#define RTOS_peripheral_system_clock_ms_for_0x00000040ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x00000040)
+#define RTOS_peripheral_system_clock_ms_for_0x00000020ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x00000020)
+#define RTOS_peripheral_system_clock_ms_for_0x00000010ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x00000010)
+#define RTOS_peripheral_system_clock_ms_for_0x00000008ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x00000008)
+#define RTOS_peripheral_system_clock_ms_for_0x00000004ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x00000004)
+#define RTOS_peripheral_system_clock_ms_for_0x00000002ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x00000002)
+#define RTOS_peripheral_system_clock_ms_for_0x00000001ticks	RTOS_peripheral_system_clock_ms_for_ticks(0x00000001)
 
 
 
@@ -200,7 +237,7 @@ void rtos_peripheral_switch_on(rtos_peripheral_t periph);
 })
 
 
-inline void __rtos_peripheral_ports_init(void)
+static inline void __rtos_peripheral_ports_init(void)
 {
 	PORTA = 0x00;
 	PORTB = 0x00;
@@ -214,7 +251,7 @@ inline void __rtos_peripheral_ports_init(void)
 }
 
 
-inline void __rtos_peripheral_init(void)
+static inline void __rtos_peripheral_init(void)
 {
 	ACSR 	= _BV(ACD);						//TURN OFF THE ANALOG COMPARATOR
 	PRR0 	= 0xFF;							//TURN OFF ALL PERIPHERALS
@@ -237,10 +274,10 @@ inline void __rtos_peripheral_init(void)
 		TCNT2	= 0x00;
 		OCR2A   = RTOS_peripheral_system_clock_OCRA;
 		TCCR2A  = _BV(WGM21);				//CTC on OCR0A
-		TIFR2	= 0x00;
 	#ifndef RUN_SIMULATOR
 		while(ASSR & (_BV(TCN2UB) | _BV(OCR2AUB) | _BV(TCR2AUB) | _BV(TCR2BUB)));
 	#endif
+		TIFR2	= _BV(OCF2B) | _BV(OCF2A) | _BV(TOV2);	//flags are cleared by writing one, only after the async registers have settled
 		TIMSK2	= _BV(OCIE2A);
 #endif
 }

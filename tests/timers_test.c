@@ -54,10 +54,20 @@ void timers_test(void)
 	
 	timer_start(&t1, 2162687832);
 	TEST(t1.TCNT == 2147483647);
-	
+
+	//bit 31 set but still below the cap - it must be converted, not dropped
+	timer_start(&t1, 0x80000000 + 1000);
+	TEST(t1.TCNT == 2132387180);
+
+	//largest value converted rather than capped
+	timer_start(&t1, 2162687831);
+	TEST(t1.TCNT == 2147483481);
+
 	timer_start(&t1, 1000000000);
 	TEST(t1.TCNT == 992969698);
-	
+	TEST(__timer_get_remaining_ticks(&t1) == 992969698);
+	TEST(timer_get_time(&t1) == 1000000001);	//ms -> ticks -> ms, rounding of each bit adds 1 ms
+
 	timer_start(&t1, 463129181);
 	TEST(t1.TCNT == 459873244);
 	
@@ -80,27 +90,27 @@ void timers_test(void)
 		time2 -= 13000;
 		time3 -= 13000;
 	}
-	TEST(timer_get_time(&t1) == time1);
-	TEST(timer_get_time(&t2) == time2);
-	TEST(timer_get_time(&t3) == time3);
+	TEST(__timer_get_remaining_ticks(&t1) == time1);
+	TEST(__timer_get_remaining_ticks(&t2) == time2);
+	TEST(__timer_get_remaining_ticks(&t3) == time3);
 	
 	__timer_refresh_timers(65535);
 	time2 -= 65535;
 	time3 -= 65535;
-	TEST(timer_get_time(&t1) == 0);
-	TEST(timer_get_time(&t2) == time2);
-	TEST(timer_get_time(&t3) == time3);
+	TEST(__timer_get_remaining_ticks(&t1) == 0);
+	TEST(__timer_get_remaining_ticks(&t2) == time2);
+	TEST(__timer_get_remaining_ticks(&t3) == time3);
 
 	__timer_refresh_timers(65535);	
 	time3 -= 65535;
 	TEST(t2_timer_reset == TRUE);
-	TEST(timer_get_time(&t2) != 0);
-	TEST(timer_get_time(&t3) == time3);
+	TEST(__timer_get_remaining_ticks(&t2) != 0);
+	TEST(__timer_get_remaining_ticks(&t3) == time3);
 	
 	__timer_refresh_timers(65535);	
 	TEST(task_get_state(test_rtos_task_handle(0)) == READY);
 	test_rtos_task_call(0, TRUE);
-	TEST(timer_get_time(&t3) == 0);
+	TEST(__timer_get_remaining_ticks(&t3) == 0);
 	test_rtos_remove_task_from_scheduler(0);
 	
 	
@@ -108,7 +118,7 @@ void timers_test(void)
 	timer_stop_Notify(&t2);
 	TEST(t2_timer_reset == TRUE);
 	timer_stop(&t2);
-	TEST(timer_get_time(&t2) == 0);
+	TEST(__timer_get_remaining_ticks(&t2) == 0);
 	
 }
 

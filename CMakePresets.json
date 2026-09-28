@@ -1,0 +1,33 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": { "major": 3, "minor": 20, "patch": 0 },
+
+    "configurePresets": [
+        {
+            "name": "atmega1284",
+            "displayName": "ATmega1284",
+            "description": "Default target: ATmega1284 at 14.7456 MHz",
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "toolchainFile": "${sourceDir}/cmake/avr-toolchain.cmake",
+            "cacheVariables": {
+                "MCU": "atmega1284",
+                "EXAMPLE": "blink",
+                "CMAKE_BUILD_TYPE": "",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            }
+        },
+        {
+            "name": "atmega1284-tests",
+            "displayName": "ATmega1284 + tests",
+            "description": "Same target with the built-in test suite compiled in",
+            "inherits": "atmega1284",
+            "cacheVariables": { "RTOS_BUILD_TESTS": "ON" }
+        }
+    ],
+
+    "buildPresets": [
+        { "name": "atmega1284",       "configurePreset": "atmega1284" },
+        { "name": "atmega1284-tests", "configurePreset": "atmega1284-tests" }
+    ]
+}

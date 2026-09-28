@@ -77,7 +77,8 @@ uint32_t __timer_ms_to_ticks_32bits(uint32_t time_ms)
 {	
 	uint32_t ticks = 0;
 	
-	if(time_ms & 0x40000000)ticks = RTOS_peripheral_system_clock_ticks_for_0x40000000ms;
+	if(time_ms & 0x80000000)ticks = RTOS_peripheral_system_clock_ticks_for_0x80000000ms;
+	if(time_ms & 0x40000000)ticks += RTOS_peripheral_system_clock_ticks_for_0x40000000ms;
 	if(time_ms & 0x20000000)ticks += RTOS_peripheral_system_clock_ticks_for_0x20000000ms;
 	if(time_ms & 0x10000000)ticks += RTOS_peripheral_system_clock_ticks_for_0x10000000ms;
 	if(time_ms & 0x08000000)ticks += RTOS_peripheral_system_clock_ticks_for_0x08000000ms;
@@ -98,28 +99,82 @@ uint32_t __timer_ms_to_ticks_32bits(uint32_t time_ms)
 
 
 /**********************************************************************************************//**
- * @fn	uint16_t __timer_get_time_ms(void)
+ * @fn	uint32_t __timer_ticks_to_ms(uint32_t ticks)
  *
- * @brief	function returns the value of the ms counter, you must disable the global interrupt before calling this function
+ * @brief	the function converts system clock ticks back into milliseconds.
+ *			The core counts time in ticks; this is only for reporting a time to
+ *			the application, such as rtos_get_system_time_ms().
+ *
+ *			Same trick as the other direction: every constant below is folded by
+ *			the preprocessor, so no 64-bit arithmetic reaches the target.
+ *
+ * @returns	An uint32_t.
+ **************************************************************************************************/
+
+uint32_t __timer_ticks_to_ms(uint32_t ticks)
+{
+	uint32_t ms = 0;
+
+	if(ticks & 0x80000000)ms = RTOS_peripheral_system_clock_ms_for_0x80000000ticks;
+	if(ticks & 0x40000000)ms += RTOS_peripheral_system_clock_ms_for_0x40000000ticks;
+	if(ticks & 0x20000000)ms += RTOS_peripheral_system_clock_ms_for_0x20000000ticks;
+	if(ticks & 0x10000000)ms += RTOS_peripheral_system_clock_ms_for_0x10000000ticks;
+	if(ticks & 0x08000000)ms += RTOS_peripheral_system_clock_ms_for_0x08000000ticks;
+	if(ticks & 0x04000000)ms += RTOS_peripheral_system_clock_ms_for_0x04000000ticks;
+	if(ticks & 0x02000000)ms += RTOS_peripheral_system_clock_ms_for_0x02000000ticks;
+	if(ticks & 0x01000000)ms += RTOS_peripheral_system_clock_ms_for_0x01000000ticks;
+	if(ticks & 0x00800000)ms += RTOS_peripheral_system_clock_ms_for_0x00800000ticks;
+	if(ticks & 0x00400000)ms += RTOS_peripheral_system_clock_ms_for_0x00400000ticks;
+	if(ticks & 0x00200000)ms += RTOS_peripheral_system_clock_ms_for_0x00200000ticks;
+	if(ticks & 0x00100000)ms += RTOS_peripheral_system_clock_ms_for_0x00100000ticks;
+	if(ticks & 0x00080000)ms += RTOS_peripheral_system_clock_ms_for_0x00080000ticks;
+	if(ticks & 0x00040000)ms += RTOS_peripheral_system_clock_ms_for_0x00040000ticks;
+	if(ticks & 0x00020000)ms += RTOS_peripheral_system_clock_ms_for_0x00020000ticks;
+	if(ticks & 0x00010000)ms += RTOS_peripheral_system_clock_ms_for_0x00010000ticks;
+	if(ticks & 0x00008000)ms += RTOS_peripheral_system_clock_ms_for_0x00008000ticks;
+	if(ticks & 0x00004000)ms += RTOS_peripheral_system_clock_ms_for_0x00004000ticks;
+	if(ticks & 0x00002000)ms += RTOS_peripheral_system_clock_ms_for_0x00002000ticks;
+	if(ticks & 0x00001000)ms += RTOS_peripheral_system_clock_ms_for_0x00001000ticks;
+	if(ticks & 0x00000800)ms += RTOS_peripheral_system_clock_ms_for_0x00000800ticks;
+	if(ticks & 0x00000400)ms += RTOS_peripheral_system_clock_ms_for_0x00000400ticks;
+	if(ticks & 0x00000200)ms += RTOS_peripheral_system_clock_ms_for_0x00000200ticks;
+	if(ticks & 0x00000100)ms += RTOS_peripheral_system_clock_ms_for_0x00000100ticks;
+	if(ticks & 0x00000080)ms += RTOS_peripheral_system_clock_ms_for_0x00000080ticks;
+	if(ticks & 0x00000040)ms += RTOS_peripheral_system_clock_ms_for_0x00000040ticks;
+	if(ticks & 0x00000020)ms += RTOS_peripheral_system_clock_ms_for_0x00000020ticks;
+	if(ticks & 0x00000010)ms += RTOS_peripheral_system_clock_ms_for_0x00000010ticks;
+	if(ticks & 0x00000008)ms += RTOS_peripheral_system_clock_ms_for_0x00000008ticks;
+	if(ticks & 0x00000004)ms += RTOS_peripheral_system_clock_ms_for_0x00000004ticks;
+	if(ticks & 0x00000002)ms += RTOS_peripheral_system_clock_ms_for_0x00000002ticks;
+	if(ticks & 0x00000001)ms += RTOS_peripheral_system_clock_ms_for_0x00000001ticks;
+
+	return ms;
+}
+
+
+/**********************************************************************************************//**
+ * @fn	uint16_t __timer_get_time_ticks(void)
+ *
+ * @brief	function returns the value of the tick counter, you must disable the global interrupt before calling this function
  *
  *
  * @returns	An uint16_t.
  **************************************************************************************************/
 
-uint16_t __timer_get_time_ms(void)
+uint16_t __timer_get_time_ticks(void)
 {	
 	return __timer_system_time;
 }
 
 
 /**********************************************************************************************//**
- * @fn	void __timer_clear_time_ms(void)
+ * @fn	void __timer_clear_time_ticks(void)
  *
- * @brief	function clears the ms counter, you must disable the global interrupt before calling this function
+ * @brief	function clears the tick counter, you must disable the global interrupt before calling this function
  *
  **************************************************************************************************/
 
-void __timer_clear_time_ms(void)
+void __timer_clear_time_ticks(void)
 {	
 	__timer_system_time = 0;
 }
@@ -169,18 +224,18 @@ void __timer_start_timer(timer_handle_t *timer, uint32_t tcnt, task_handle_t *li
 		__timer_timers	  = timer;
 	}
 	/**
-	* We set the time [ms] for the countdown. 
-	* We add the current system time to the tcnt and apply the error correction by subtracting 7.08 microseconds from each millisecond.
+	* Convert the countdown from ms to ticks, then add the ticks the scheduler has not yet
+	* subtracted from the timers (same as the task delay in task.c).
+	* TCNT holds only 31 bits, so the result is capped at 0x7FFFFFFF.
 	*/
-	if(!(tcnt & 0x80000000))tcnt += current_time;	//The TCNT timer register uses only 31 bits, so adding the current time no longer makes sense for much larger values. 
-	
 	if(tcnt >= 2162687832){ // if time is bigger than 2 162 687 832 [ms]
 		c_time = 0x7FFFFFFF;	 //fixed time
-			
+
 	}else{
 		c_time = __timer_ms_to_ticks_32bits(tcnt);
 	}
-	timer->TCNT = c_time;
+	c_time += current_time;
+	timer->TCNT = (c_time > 0x7FFFFFFF) ? 0x7FFFFFFF : c_time;
 }
 
 /**********************************************************************************************//**
@@ -304,17 +359,32 @@ void __timer_refresh_timers(uint16_t time)
 
 
 /**********************************************************************************************//**
- * @fn	uint32_t timer_get_time(timer_handle_t *timer)
+ * @fn	uint32_t __timer_get_remaining_ticks(timer_handle_t *timer)
  *
- * @brief	use to get the remaining time
+ * @brief	Used by the system to get the remaining time in ticks, without the conversion to ms
  *
  * @param 		timer			  	If non-null, the timer to read.
- * @returns		An uint32_t.
+ * @returns		An uint32_t remaining time [ticks].
+ **************************************************************************************************/
+
+uint32_t __timer_get_remaining_ticks(timer_handle_t *timer)
+{
+	return (timer != NULL) ? timer->TCNT : 0;	
+}
+
+
+/**********************************************************************************************//**
+ * @fn	uint32_t timer_get_time(timer_handle_t *timer)
+ *
+ * @brief	use to get the remaining time in ms
+ *
+ * @param 		timer			  	If non-null, the timer to read.
+ * @returns		An uint32_t remaining time [ms].
  **************************************************************************************************/
 
 uint32_t timer_get_time(timer_handle_t *timer)
 {
-	return (timer != NULL) ? timer->TCNT : 0;	
+	return __timer_ticks_to_ms(__timer_get_remaining_ticks(timer));
 }
 
 

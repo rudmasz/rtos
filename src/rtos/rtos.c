@@ -42,13 +42,19 @@ volatile uint8_t MCUCSR_saved_val				__attribute__((section(".noinit")));
 RTOS_static				task_handle_t			__idle_task;
 RTOS_static	volatile	uint8_t					__stack[BOARD_stack_size] __attribute__((section(".noinit")));
 RTOS_static	volatile	uint32_t				__rtos_system_time;
-					void						(*rtos_response_on_brownout_reset)(void); 
-					void						(*rtos_response_on_power_on_reset)(void);
-					void						(*rtos_response_on_jtag_reset)(void);
-					void						(*rtos_response_on_external_reset)(void);
-					void						(*rtos_initialize_avr_device)(void);
-					void						(*rtos_response_on_watchdog_reset)(task_handle_t *current_task);
-					void						(*rtos_response_on_error)(int8_t sign, uint32_t err_code);
+/*
+ * User-overridable hooks. Each one is a weak definition defaulting to NULL, so
+ * an application may define its own at file scope and have it win at link time,
+ * or ignore it entirely. Weak is required here: since GCC 10 defaults to
+ * -fno-common, a plain tentative definition would clash with the user's.
+ */
+__attribute__((weak))	void						(*rtos_response_on_brownout_reset)(void)						= NULL;
+__attribute__((weak))	void						(*rtos_response_on_power_on_reset)(void)						= NULL;
+__attribute__((weak))	void						(*rtos_response_on_jtag_reset)(void)							= NULL;
+__attribute__((weak))	void						(*rtos_response_on_external_reset)(void)						= NULL;
+__attribute__((weak))	void						(*rtos_initialize_avr_device)(void)								= NULL;
+__attribute__((weak))	void						(*rtos_response_on_watchdog_reset)(task_handle_t *current_task)	= NULL;
+__attribute__((weak))	void						(*rtos_response_on_error)(int8_t sign, uint32_t err_code)		= NULL;
 
 
 
@@ -68,15 +74,18 @@ RTOS_static volatile		rtos_peripheral_register_t		__rtos_peripherals;
 
 void __attribute__ ((naked)) __attribute__ ((section (".init2"))) __rtos_stac_setup(void)
 {
+	// Must come before the startup delay: after a watchdog reset WDRF keeps the
+	// watchdog running at ~16 ms, so a longer delay would reset the MCU forever.
+	MCUCSR_saved_val 	= MCUSR;
+	MCUSR				= 0x00;
+
+	wdt_disable();
+
 #if BOARD_startup_time_ms != 0x0000
 	for(uint16_t i=0x00; i<BOARD_startup_time_ms ; i++){
 		_delay_us(1000);
 	}
 #endif
-	MCUCSR_saved_val 	= MCUSR;
-	MCUSR				= 0x00;
-
-	wdt_disable();
 
 	__stack[0] = RTOS_stack_overflow_tag;
 	__stack[1] = RTOS_stack_overflow_tag;
@@ -173,11 +182,12 @@ TASK_my_task_t idle_task(void)
 uint32_t rtos_get_system_time_ms(void)
 {
 	uint8_t irq_state = rtos_cli();
-	uint32_t Time = __timer_get_time_ms();
-	
+	uint32_t ticks = __timer_get_time_ticks();
+
 	rtos_sei(irq_state);
 
-	return Time + __rtos_system_time;
+	// The core keeps time in ticks; only this boundary reports milliseconds.
+	return __timer_ticks_to_ms(ticks + __rtos_system_time);
 }
 
 
@@ -347,7 +357,7 @@ __attribute__ ((noinline)) uint8_t rtos_irq_get(rtos_peripheral_irq_t irq)
 #endif
 {
 	asm volatile(									
-				"rjmp BackFromTaskLabel	\n\t"
+				"jmp  BackFromTaskLabel	\n\t"
 				::);
 }
 
@@ -410,10 +420,15 @@ __attribute__((naked)) void __rtos_scheduler(void)
 			while(1);
 		}
 		cli();
-		time = __timer_get_time_ms();
-		__timer_clear_time_ms();
+		time = __timer_get_time_ticks();
+		__timer_clear_time_ticks();
 		sei();
-		
+
+		// The tick counter is drained on every pass, so whatever it held has to
+		// be carried over here or it is lost. Without this the system clock
+		// never advances past one tick.
+		__rtos_system_time += time;
+
 		if(time != 0){
 			__timer_refresh_timers(time);
 			__task_refresh_delayed(time);
@@ -479,7 +494,7 @@ __attribute__((naked)) int main()
 	wdt_enable(BOARD_watch_dog_time);			//WATCHDOG ENABLE
 
 	sei();
-	asm volatile("rjmp __rtos_scheduler		\n\t"		
+	asm volatile("jmp  __rtos_scheduler		\n\t"		
 				::);
 
 }

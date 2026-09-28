@@ -1,0 +1,103 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            // On-target debugging through an Atmel-ICE over JTAG.
+            // PyAvrOCD is started automatically and serves GDB on port 2000.
+            "name": "AVR: Atmel-ICE (JTAG)",
+            "type": "cppdbg",
+            "request": "launch",
+
+            // The .elf of whichever target is selected in CMake Tools, so this
+            // follows the active preset instead of naming a fixed path.
+            "program": "${command:cmake.launchTargetPath}",
+            "cwd": "${workspaceFolder}",
+
+            // The debugger itself. Taken from PATH so the file stays portable;
+            // launch VS Code from a terminal, or make sure avr-gdb is on the
+            // PATH the editor inherits.
+            "MIMode": "gdb",
+            "miDebuggerPath": "avr-gdb",
+            "miDebuggerServerAddress": "localhost:2000",
+
+            // Device and clock come from pyavrocd.args, written by CMake at
+            // configure time from MCU and boards/<BOARD>/board.h, so switching
+            // preset switches the debug target too.
+            //
+            // Launched through env to set PYTHONUNBUFFERED: PyAvrOCD is a Python
+            // program and block-buffers stdout when it is a pipe, so the ready
+            // line would never reach VS Code. Measured: nothing in 90 s buffered,
+            // 0.25 s unbuffered.
+            "debugServerPath": "/usr/bin/env",
+            "debugServerArgs": "PYTHONUNBUFFERED=1 ${env:HOME}/.local/bin/pyavrocd @${workspaceFolder}/build/pyavrocd.args -i jtag -t atmelice -p 2000",
+
+            // Text to wait for on the server output before connecting GDB.
+            // Must match what PyAvrOCD actually prints.
+            "serverStarted": "Listening on port",
+
+            // Both filters must be listed. Setting only filterStderr makes cppdbg
+            // stop watching stdout for serverStarted - and PyAvrOCD prints there,
+            // leaving stderr empty. That mismatch surfaces as the unhelpful
+            // "Debug server process failed to initialize".
+            "filterStdout": true,
+            "filterStderr": true,
+
+            // simavr starts with empty flash and cppdbg does not download the
+            // program on its own, so the target would execute 0xFFFF forever
+            // while GDB happily showed source lines from the ELF. Flash it here.
+            "postRemoteConnectCommands": [
+                { "text": "load", "description": "flash the program", "ignoreFailures": false }
+            ],
+
+
+
+            // SVD from the PyAvrOCD project (300 devices, generated from ATDF
+            // and patched for the 0x800000 data-space base). Same structure the
+            // local tools/atdf2svd.py produces.
+            "svdPath": "${workspaceFolder}/debug/ATmega1284P.svd",
+
+            "stopAtConnect": true,
+            "externalConsole": false,
+            "setupCommands": [
+                // Allow breakpoints on code that is not loaded yet.
+                { "text": "set breakpoint pending on" }
+            ]
+        },
+        {
+            // Same session without any hardware: PyAvrOCD starts simavr and
+            // bridges it to GDB, so the setup can be exercised on its own.
+            "name": "AVR: simavr (no hardware)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${command:cmake.launchTargetPath}",
+            "cwd": "${workspaceFolder}",
+            "MIMode": "gdb",
+            "miDebuggerPath": "avr-gdb",
+            "miDebuggerServerAddress": "localhost:2000",
+            "debugServerPath": "/usr/bin/env",
+            "debugServerArgs": "PYTHONUNBUFFERED=1 ${env:HOME}/.local/bin/pyavrocd @${workspaceFolder}/build/pyavrocd.args -p 2000 --start simavr",
+            "serverStarted": "Listening on port",
+            "filterStdout": true,
+            "filterStderr": true,
+            // simavr starts with empty flash and cppdbg does not download the
+            // program on its own, so the target would execute 0xFFFF forever
+            // while GDB happily showed source lines from the ELF. Flash it here.
+            "postRemoteConnectCommands": [
+                { "text": "load", "description": "flash the program", "ignoreFailures": false }
+            ],
+
+
+
+            // SVD from the PyAvrOCD project (300 devices, generated from ATDF
+            // and patched for the 0x800000 data-space base). Same structure the
+            // local tools/atdf2svd.py produces.
+            "svdPath": "${workspaceFolder}/debug/ATmega1284P.svd",
+
+            "stopAtConnect": true,
+            "externalConsole": false,
+            "setupCommands": [
+                { "text": "set breakpoint pending on" }
+            ]
+        }
+    ]
+}

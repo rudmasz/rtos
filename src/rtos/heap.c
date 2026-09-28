@@ -52,7 +52,7 @@ static void __heap_wake_up_next_waiting_task(void)
 uint8_t heap_check_if_dynamic_mem(void *mem_addr)
 {
 	if( (mem_addr >= (void *)__heap.mem_space[0x00]) &&
-		(mem_addr <= (void *)__heap.mem_space[(BOARD_heap_number_of_blocks - 0x01)])
+		(mem_addr < (void *)&__heap.mem_space[BOARD_heap_number_of_blocks])
 	){
 		return TRUE;
 	}

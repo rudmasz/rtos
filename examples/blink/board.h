@@ -15,7 +15,7 @@
 #define BOARD_watch_dog_time			WDTO_500MS		//set watchdog reset time
 #define BOARD_cpu_clock					14745600		//set the frequency of the oscillator
 #define BOARD_include_timers			TRUE			//set TRUE if you want to use timers
-#define BOARD_has_external_clock_input	FALSE			//set TRUE if you connected an external 32.768KHz oscillator
+#define BOARD_has_external_clock_input	FALSE			//TRUE - external 32.768kHz clock signal on TOSC1, FALSE - 32.768kHz crystal on TOSC1/TOSC2
 
 
 #endif

@@ -9,10 +9,11 @@
 #ifndef TIMERS_H_
 #define TIMERS_H_
 
-uint16_t __timer_get_time_ms(void);
-void	 __timer_clear_time_ms(void);
+uint16_t __timer_get_time_ticks(void);
+void	 __timer_clear_time_ticks(void);
 uint16_t __timer_ms_to_ticks_16bits(uint16_t time_ms);
 uint32_t __timer_ms_to_ticks_32bits(uint32_t time_ms);
+uint32_t __timer_ticks_to_ms(uint32_t ticks);
 
 
 
@@ -50,6 +51,7 @@ void __timer_stop_all_for_given_task(task_handle_t *owner);
 void __timer_refresh_timers(uint16_t time);
 void __timer_start_timer(timer_handle_t *timer, uint32_t tcnt, task_handle_t *listener, void (*notify_f)(void));
 void __timer_stop_timer(timer_handle_t *timer, uint8_t if_notify_listener);
+uint32_t __timer_get_remaining_ticks(timer_handle_t *timer);
 
 
 
@@ -98,10 +100,10 @@ void __timer_stop_timer(timer_handle_t *timer, uint8_t if_notify_listener);
 /**********************************************************************************************//**
  * @fn	uint32_t timer_get_time(timer_handle_t *timer)
  *
- * @brief	use to get the remaining time
+ * @brief	use to get the remaining time in ms
  *
  * @param 	timer			  	If non-null, the timer to read.
- * @returns	uint32_t.
+ * @returns	uint32_t remaining time [ms].
  **************************************************************************************************/
 uint32_t timer_get_time(timer_handle_t *timer);
 
@@ -152,7 +154,7 @@ int8_t timer_cmp_timers_time(timer_handle_t *tim1, timer_handle_t *tim2);
  * @returns			TRUE - if is counting down,
  *					FALSE - if is not counting down.
  **************************************************************************************************/
-#define timer_is_counting_down(timer) (timer_get_time(timer) != 0 ? TRUE : FALSE)
+#define timer_is_counting_down(timer) (__timer_get_remaining_ticks(timer) != 0 ? TRUE : FALSE)
 
 
 #endif /* RTOS_INCLUDE_TIMERS */

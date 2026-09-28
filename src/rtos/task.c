@@ -119,9 +119,9 @@ task_handle_t *task_list_pop_front(task_handle_t **head)
 task_handle_t *task_list_pop_back(task_handle_t **head)
 {
 	task_handle_t *task;
-	
-	if(head == NULL)return NULL;
-	
+
+	if( (head == NULL) || (*head == NULL) )return NULL;
+
 	while((*head)->next_task != NULL){
 		head = &((*head)->next_task);
 	}
@@ -480,7 +480,7 @@ __attribute__ ((noinline)) task_handle_t *_task_freeze(task_state_t new_task_sta
 		for(task_handle_t *list_task = (__task_ready_g ? __task_ready_g->next_task : NULL); list_task != task; list_task = list_task->next_task){
 			if(list_task == __task_ready_g){										//there is no such task in the currently running task list
 				if( (task->next_task == NULL) && (task->prev_task == NULL) ){		//the state can only be changed if the task is not attached to any task list
-					task->state = new_task_state == (new_task_state == RUNNING) || (new_task_state == READY) ? SLEEP_INFINITE : new_task_state;
+					task->state = (new_task_state == RUNNING) || (new_task_state == READY) ? SLEEP_INFINITE : new_task_state;
 				}
 				return task;
 			}
@@ -532,7 +532,10 @@ __attribute__ ((noinline))void task_unfreeze(task_handle_t *wakeup_task)
 		task = (task_handle_t *)__task_ready_g;
 		
 	}else{
-		task = (task_handle_t *)__task_ready_g->prev_task;
+		// Guarded because the ready list may be empty; the check below handles
+		// that case, but this line would already have dereferenced NULL. Only
+		// the non-empty branch ever reads task, so NULL here is harmless.
+		task = (__task_ready_g != NULL) ? (task_handle_t *)__task_ready_g->prev_task : NULL;
 	}
 
 	if(__task_ready_g == NULL){	//if there is only one task, it must point to itself as prev_task/next_task
@@ -625,7 +628,7 @@ __attribute__ ((noinline)) void __task_delay(uint16_t time_ms)
 	if(task != NULL){
 		if(time_ms){
 			uint8_t irq_flag = rtos_cli();
-			uint16_t current_time = __timer_get_time_ms();
+			uint16_t current_time = __timer_get_time_ticks();
 			rtos_sei(irq_flag);
 			uint32_t sleep = (uint32_t)__timer_ms_to_ticks_16bits(time_ms) + (uint32_t)current_time;
 			
@@ -791,7 +794,16 @@ __attribute__ ((noinline)) void _task_erase(uint8_t if_permanent, task_handle_t 
 			return;
 		task = (task_handle_t *)__task_ready_g;
 	}
-	
+
+	if(task != __task_ready_g){
+		for(task_handle_t *ancestor = (task_handle_t *)__task_ready_g; ancestor != NULL; ancestor = ancestor->family.parent_task){
+			if(ancestor->family.parent_task == task){
+				rtos_error(0x01, __Err_DeviceSoftware_rtOS_AncestorErase);						//err the task to erase is an ancestor of the running task
+				return;
+			}
+		}
+	}
+
 	if(task->family.parent_task != NULL)
 	{
 		task_handle_t *parent_task = task->family.parent_task;

@@ -5,29 +5,38 @@
     "configurePresets": [
         {
             "name": "atmega1284",
-            "displayName": "ATmega1284",
-            "description": "Default target: ATmega1284 at 14.7456 MHz",
+            "displayName": "ATmega1284 - hardware",
+            "description": "Real board: ATmega1284 at 14.7456 MHz, Timer2 from the 32 kHz TOSC input",
             "generator": "Unix Makefiles",
             "binaryDir": "${sourceDir}/build/${presetName}",
             "toolchainFile": "${sourceDir}/cmake/avr-toolchain.cmake",
             "cacheVariables": {
                 "MCU": "atmega1284",
                 "EXAMPLE": "blink",
+                "RTOS_SIMULATOR": "OFF",
                 "CMAKE_BUILD_TYPE": "",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
             }
         },
         {
-            "name": "atmega1284-tests",
-            "displayName": "ATmega1284 + tests",
-            "description": "Same target with the built-in test suite compiled in",
+            "name": "atmega1284-sim",
+            "displayName": "ATmega1284 - SIMULATOR",
+            "description": "simavr: Timer2 from the CPU clock (RUN_SIMULATOR), not for hardware",
             "inherits": "atmega1284",
+            "cacheVariables": { "RTOS_SIMULATOR": "ON" }
+        },
+        {
+            "name": "atmega1284-sim-tests",
+            "displayName": "ATmega1284 - SIMULATOR + tests",
+            "description": "simavr with the built-in test suite compiled in",
+            "inherits": "atmega1284-sim",
             "cacheVariables": { "RTOS_BUILD_TESTS": "ON" }
         }
     ],
 
     "buildPresets": [
-        { "name": "atmega1284",       "configurePreset": "atmega1284" },
-        { "name": "atmega1284-tests", "configurePreset": "atmega1284-tests" }
+        { "name": "atmega1284",           "configurePreset": "atmega1284" },
+        { "name": "atmega1284-sim",       "configurePreset": "atmega1284-sim" },
+        { "name": "atmega1284-sim-tests", "configurePreset": "atmega1284-sim-tests" }
     ]
 }

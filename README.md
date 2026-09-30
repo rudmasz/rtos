@@ -427,8 +427,14 @@ mix object files from different targets.
 
 | preset | what it builds |
 |---|---|
-| `atmega1284` | the `blink` example against the RTOS |
-| `atmega1284-tests` | same, with the built-in test suite compiled in |
+| `atmega1284` | the `blink` example for a real board |
+| `atmega1284-sim` | same, for simavr (`RUN_SIMULATOR`) |
+| `atmega1284-sim-tests` | simavr build with the built-in test suite compiled in |
+
+Under `RUN_SIMULATOR` Timer2 runs from the CPU clock instead of the 32.768 kHz
+TOSC input, so a simulator build on real hardware keeps time about 14x too fast.
+Simulator builds say so twice: a CMake warning at configure time and a
+`*** SIMULATOR BUILD - not for hardware ***` line after every build.
 
 Each example owns its hardware description: `examples/<name>/` holds both
 `main.c` and the `board.h` it is built against, so one directory is the whole

@@ -6,6 +6,7 @@ set(MCU   atmega1284   CACHE STRING "target AVR device")
 set(EXAMPLE blink      CACHE STRING "subdirectory of examples/ to build")
 
 option(RTOS_BUILD_TESTS "compile the built-in tests (RUN_TESTS)" OFF)
+option(RTOS_SIMULATOR   "build for simavr (RUN_SIMULATOR): Timer2 runs from the CPU clock" OFF)
 
 # Each example carries its own board.h next to its source, so everything that
 # describes one example lives in one directory. A product built on this platform
@@ -29,7 +30,15 @@ add_compile_options(
     # discard whole .o files, and every .o holds something that is used.
     -ffunction-sections -fdata-sections
 )
-add_compile_definitions(DEBUG RUN_SIMULATOR)
+add_compile_definitions(DEBUG)
+
+# Under RUN_SIMULATOR Timer2 is clocked from the CPU instead of the 32 kHz TOSC
+# input, so on real hardware the system time would run about 14x too fast.
+# Make that impossible to miss: at configure time and after every build.
+if(RTOS_SIMULATOR)
+    add_compile_definitions(RUN_SIMULATOR)
+    message(WARNING "SIMULATOR build (RUN_SIMULATOR) - do not flash this firmware onto hardware")
+endif()
 
 # ------------------------------------------------------------------- linking
 # Reserve 8 bytes at the start of RAM (RAMSTART = 0x0100) for the structure the
@@ -123,3 +132,9 @@ add_custom_command(TARGET ${EXAMPLE} POST_BUILD
     COMMAND ${AVR_SIZE} $<TARGET_FILE:${EXAMPLE}>
     VERBATIM
 )
+if(RTOS_SIMULATOR)
+    add_custom_command(TARGET ${EXAMPLE} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E echo "*** SIMULATOR BUILD - not for hardware ***"
+        VERBATIM
+    )
+endif()

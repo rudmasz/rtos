@@ -94,8 +94,6 @@
 	#define RTOS_static
 #endif
 
-void __rtos_wait_irq_val(rtos_peripheral_irq_t irq_nr);
-
 
 /**********************************************************************************************//**
  * User-overridable hooks.

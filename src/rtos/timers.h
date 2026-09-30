@@ -157,7 +157,17 @@ int8_t timer_cmp_timers_time(timer_handle_t *tim1, timer_handle_t *tim2);
 #define timer_is_counting_down(timer) (__timer_get_remaining_ticks(timer) != 0 ? TRUE : FALSE)
 
 
-#endif /* RTOS_INCLUDE_TIMERS */
+#else
+/*
+ * Timers compiled out. The scheduler and task_erase still call these two, so
+ * give them empty bodies here instead of guarding every call site. The public
+ * timer_* API stays undefined on purpose: using it without timers should fail
+ * to compile, not silently do nothing.
+ */
+static inline void __timer_stop_all_for_given_task(task_handle_t *owner) { (void)owner; }
+static inline void __timer_refresh_timers(uint16_t time) { (void)time; }
+
+#endif /* BOARD_include_timers */
 
 
 #endif /* TIMERS_H_ */

@@ -74,7 +74,6 @@ typedef struct task_handle{
 
 
 #define TASK_number_of_dynamic_variables	(BOARD_heap_single_block_size - sizeof(task_handle_t))
-#define TASK_del_all_tasks					NULL
 
 #ifndef RUN_TESTS
 	#define TASK_my_task_t					__attribute__((OS_task, noinline)) void
@@ -637,13 +636,14 @@ void _task_erase(uint8_t if_permanent, task_handle_t *task);
 /**********************************************************************************************//**
  * @fn	uint8_t task_check_relationship(task_handle_t *task_parent, task_rtos_handle_t *task_child)
  *
- * @brief	the function will check if the given task_child is a descendant of the task_parent.
+ * @brief	the function will check if task_child is the direct child of task_parent.
+ *			Only one level is checked: a grandchild is not reported.
  *
  * @param	task_parent		parent task
  *			task_child		child task to check.
  *
- * @returns	uint8_t 		TRUE - task_child is a offspring of the currently running task.
- *							FALSE - task_child is not a offspring of the currently running task.
+ * @returns	uint8_t 		TRUE - task_parent and task_child are linked as parent and child.
+ *							FALSE - they are not.
  **************************************************************************************************/
 uint8_t task_check_relationship(task_handle_t *task_parent, task_handle_t *task_child);
 

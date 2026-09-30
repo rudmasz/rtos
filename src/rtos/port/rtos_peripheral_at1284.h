@@ -283,7 +283,7 @@ static inline void __rtos_peripheral_init(void)
 }
 
 #ifdef BOARD_AT_Package_TQFP
-inline uint8_t volatile *__rtos_getPORT(uint8_t pin_num)		
+static inline uint8_t volatile *__rtos_getPORT(uint8_t pin_num)		
 {														
 	if( (!pin_num) || (pin_num > 44) )return (void *)0x00;
 
@@ -295,7 +295,7 @@ inline uint8_t volatile *__rtos_getPORT(uint8_t pin_num)
 	return (void *)0x00;
 }
 
-inline uint8_t volatile *__rtos_getPIN(uint8_t pin_num)		
+static inline uint8_t volatile *__rtos_getPIN(uint8_t pin_num)		
 {														
 	if( (!pin_num) || (pin_num > 44) )return (void *)0x00;
 
@@ -307,7 +307,7 @@ inline uint8_t volatile *__rtos_getPIN(uint8_t pin_num)
 	return (void *)0x00;
 }
 
-inline uint8_t volatile *__rtos_getDDR(uint8_t pin_num)		
+static inline uint8_t volatile *__rtos_getDDR(uint8_t pin_num)		
 {														
 	if( (!pin_num) || (pin_num > 44) )return (void *)0x00;
 
@@ -319,7 +319,7 @@ inline uint8_t volatile *__rtos_getDDR(uint8_t pin_num)
 	return (void *)0x00;
 }
 
-inline uint8_t __rtos_get_port_pin_nr(uint8_t pin_num)		
+static inline uint8_t __rtos_get_port_pin_nr(uint8_t pin_num)		
 {														
 	if(!pin_num)return 0x00;
 

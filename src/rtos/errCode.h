@@ -5,19 +5,18 @@
 						Error definitions 	
 **************************************************************************/
 
-/*		Emergency			Meaning
-		Error Code
+/*		Error code			Meaning
 									
-		50xxxxxx			Device Hardware
-		60xxxxxx			Device Software
-		80xxxxxx			Monitoring
+		00xxxxxx			Device Software (RTOS)
+		C0xxxxxx			Device Hardware
+		F0xxxxxx			Monitoring
 		FFxxxxxx			Device specific
 
 		NOTE!!!! THE TWO LEAST SIGNIFICANT BYTES ARE SEEN BY THE RTOS AS A PLACE TO ADD THE ADDRESS OF THE CURRENT TASK (RESPONSIBLE FOR THE ERROR THAT OCCURRED)
 		THUS, ERROR CODES THAT ARE NOT RELATED TO A FAULTY TASK OPERATION SHOULD HAVE SOME VALUE IN THIS POSITION, E.G.
 					
-		#define __Err_Current_DevInputS							0x20000001	- THIS ERROR IS NOT CAUSED BY AN INCORRECT TASK OPERATION. VALUE ONE IN THE FOUR YOUNGER BYTES
-		#define __Err_DeviceSoftware_rtOS_SemaphoreOwner		0x60000000	- THE AUTHOR OF THE ERROR IS TASK, THE SYSTEM WILL ADD ITS ADDRESS IN THE POSITION OF THE FOUR LEAST SIGNIFICANT BYTES
+		#define __Err_DeviceHardware_DS_CRC						0xC0000001	- NOT CAUSED BY A TASK: NON-ZERO LOW 16 BITS, LEFT AS IS
+		#define __Err_DeviceSoftware_rtOS_ParentReset			0x00020000	- CAUSED BY A TASK: LOW 16 BITS ARE ZERO, THE SYSTEM PUTS THE TASK FUNCTION ADDRESS THERE
 */
 
 
@@ -53,7 +52,7 @@
 		#define __Err_DeviceHardware_DS_Line				0xC0000003	//short circuit on the line
 		#define __Err_DeviceHardware_DS_NoAccess			0xC0000004	//access denied task is not the owner of the 1wire semaphore
 		#define __Err_DeviceHardware_DS_LineOff				0xC0000005	//1wire has been turned off
-		#define __Err_DeviceHardware_DS_BufferExc			0xC0000005	//internal buffer has been exceeded
+		#define __Err_DeviceHardware_DS_BufferExc			0xC0000006	//internal buffer has been exceeded
 		#define __Err_DeviceHardware_DS_TooManyDevFound		0xC0000100	//Too many Device found
 		#define __Err_DeviceHardware_DS_AllGroupFail		0xC0000200	//Group Device fail
 

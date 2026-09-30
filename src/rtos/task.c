@@ -878,13 +878,14 @@ __attribute__ ((noinline)) void _task_erase(uint8_t if_permanent, task_handle_t 
 /**********************************************************************************************//**
  * @fn	uint8_t task_check_relationship(task_handle_t *task_parent, task_rtos_handle_t *task_child)
  *
- * @brief	the function will check if the given task_child is a descendant of the task_parent.
+ * @brief	the function will check if task_child is the direct child of task_parent.
+ *			Only one level is checked: a grandchild is not reported.
  *
  * @param	task_parent		parent task
  *			task_child		child task to check.
  *
- * @returns	uint8_t 		TRUE - task_child is a offspring of the currently running task.
- *							FALSE - task_child is not a offspring of the currently running task.
+ * @returns	uint8_t 		TRUE - task_parent and task_child are linked as parent and child.
+ *							FALSE - they are not.
  **************************************************************************************************/
 
 __attribute__ ((noinline)) uint8_t task_check_relationship(task_handle_t *task_parent, task_handle_t *task_child)
